@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAXX — Sistema de Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* ════════════════════════════════════════════════════════════════════════
+   MAXX — Identidade Visual
+   Tema claro estilo SaaS: branco predominante, roxo como cor principal,
+   verde-turquesa como cor secundária/destaques positivos.
+   Mantém a mesma arquitetura de variáveis CSS — nenhuma classe ou
+   estrutura HTML/JS foi alterada, apenas os valores das variáveis.
+   ════════════════════════════════════════════════════════════════════════ */
+:root{
+  /* Superfícies — branco e cinzas muito claros */
+  --bg:#F4F3FA;--surface:#FFFFFF;--surface2:#F7F6FC;--surface3:#EFEDF8;--surface4:#E6E2F5;
+  --border:#E4E1F2;--border-light:#D8D3EE;--border-glow:rgba(124,58,237,0.18);
+  /* Texto — tons escuros para contraste sobre branco */
+  --text:#241B3D;--text-muted:#6E6690;--text-hint:#A8A1C4;
+  /* Roxo — cor principal MAXX (inspirado no gradiente enviado) */
+  --blue:#7C3AED;--blue-dim:rgba(124,58,237,0.08);--blue-glow:rgba(124,58,237,0.25);
+  --indigo:#9333EA;--indigo-dim:rgba(147,51,234,0.08);
+  --purple:#A855F7;--purple-dim:rgba(168,85,247,0.10);
+  /* Verde-turquesa — cor secundária / indicadores positivos */
+  --green:#14B8A6;--green-dim:rgba(20,184,166,0.10);--green-glow:rgba(20,184,166,0.22);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.10);
+  --orange:#FB923C;--orange-dim:rgba(251,146,60,0.10);
+  --red:#EF4444;--red-dim:rgba(239,68,68,0.08);
+  --cyan:#06B6D4;--cyan-dim:rgba(6,182,212,0.10);
+  --sidebar-w:248px;--radius:8px;--radius-lg:12px;--radius-xl:16px;
+  /* Sombras suaves — cards brancos com elevação leve, estilo SaaS */
+  --shadow-sm:0 1px 3px rgba(36,27,61,0.06),0 1px 2px rgba(36,27,61,0.04);
+  --shadow-md:0 4px 16px rgba(36,27,61,0.07),0 2px 4px rgba(36,27,61,0.04);
+  --shadow-lg:0 12px 32px rgba(36,27,61,0.10);
+}
+html,body{height:100%;overflow:hidden;font-family:'Sora',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text);display:flex}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-hint)}
+
+/* LOGIN */
+/* Cabeçalho de login com gradiente MAXX — magenta › roxo › verde-turquesa,
+   inspirado na identidade visual enviada (logo "leque" branco sobre
+   gradiente vibrante). */
+#loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:999;
+  background:linear-gradient(135deg,#F0EAFB 0%,#EDE6FB 35%,#E3F6F1 100%);
+}
+#loginScreen::before{
+  content:'';position:fixed;top:0;left:0;right:0;height:280px;z-index:-1;
+  background:linear-gradient(115deg,#E0249C 0%,#7C3AED 45%,#14B8A6 100%);
+  opacity:.92;
+}
+.login-box{width:380px;background:var(--surface);border:1px solid var(--border-light);border-radius:24px;padding:40px 36px;box-shadow:var(--shadow-lg);position:relative;z-index:1}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.login-logo-mark{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#E0249C 0%,var(--blue) 55%,var(--green) 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px var(--blue-glow)}
+.login-logo-mark svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2}
+.login-title{font-size:24px;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--blue)}
+.login-sub{font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:28px}
+.login-err{background:var(--red-dim);border:1px solid rgba(239,68,68,.25);color:var(--red);font-size:12px;padding:10px 14px;border-radius:var(--radius);margin-bottom:16px;display:none}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;z-index:20;flex-shrink:0}
+.sidebar-logo{padding:18px 14px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{width:36px;height:36px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,#E0249C 0%,var(--blue) 55%,var(--green) 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px var(--blue-glow)}
+.logo-mark svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
+.logo-name{font-size:15px;font-weight:800;letter-spacing:-0.2px;background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--blue)}
+.logo-tag{font-size:9px;color:var(--text-muted);font-weight:500;letter-spacing:.05em}
+.logo-ver{margin-left:auto;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--blue);background:var(--blue-dim);padding:2px 6px;border-radius:4px;border:1px solid rgba(124,58,237,.18)}
+.nav-section{padding:14px 10px 4px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-hint)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;margin:1px 6px;border-radius:var(--radius);font-size:12.5px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all .15s;border:none;background:none;width:calc(100% - 12px);text-align:left;position:relative;white-space:nowrap}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(124,58,237,0.10),rgba(20,184,166,0.08));color:var(--blue);font-weight:600;border:1px solid rgba(124,58,237,0.14)}
+.nav-item.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:3px;height:55%;background:linear-gradient(180deg,var(--blue),var(--green));border-radius:0 3px 3px 0}
+.nav-item svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+.nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--red);color:#fff;min-width:18px;text-align:center}
+.nav-badge.bl{background:var(--blue);color:#fff}
+.nav-badge.gr{background:#0F766E;color:#fff} /* turquesa escurecido p/ contraste WCAG AA */
+.sidebar-user{padding:12px;border-top:1px solid var(--border);margin-top:auto;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.user-chip:hover{border-color:var(--border-light)}
+.user-avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:12px;font-weight:600;line-height:1.2}
+.user-role{font-size:10px;color:var(--text-muted)}
+.user-logout{margin-left:auto;font-size:10px;color:var(--text-hint);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:5px;font-family:inherit}
+.user-logout:hover{color:var(--red);background:var(--red-dim)}
+.dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:5px;box-shadow:0 0 6px var(--green-glow);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* MAIN */
+.main{flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:54px;min-height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar-icon{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--blue)}
+.topbar-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.topbar-title{font-size:13px;font-weight:700}
+.topbar-sub{font-size:10px;color:var(--text-muted)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.content{flex:1;overflow-y:auto;overflow-x:auto;padding:18px 20px;min-width:0}
+.section{display:none}
+.section.active{display:block}
+
+/* ALERTS PANEL */
+.alerts-panel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xl);padding:14px 16px;margin-bottom:14px}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.alert-item:last-child{border-bottom:none;padding-bottom:0}
+.alert-item:first-child{padding-top:0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);transition:all .15s;white-space:nowrap;font-family:'Sora',inherit}
+.btn:hover{background:var(--surface3);color:var(--text)}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.btn-primary{background:var(--blue);color:#fff;border-color:transparent;box-shadow:0 4px 14px var(--blue-glow);font-weight:700}
+.btn-primary:hover{background:var(--indigo);transform:translateY(-1px);color:#fff}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-danger{color:var(--red);border-color:rgba(248,113,113,.2)}
+.btn-danger:hover{background:var(--red-dim);color:var(--red)}
+.btn-green{background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,.2)}
+.btn-green:hover{background:rgba(52,211,153,.2)}
+
+/* CARDS — brancos com sombra suave, estilo SaaS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-title{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-title svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;color:var(--text-muted)}
+.card-body{padding:14px 16px}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi-grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:14px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm)}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kbl::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.kpu::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.kgr::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kam::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.krd::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kcy::before{background:linear-gradient(90deg,var(--cyan),transparent)}
+.kor::before{background:linear-gradient(90deg,var(--orange),transparent)}
+.kid::before{background:linear-gradient(90deg,var(--indigo),transparent)}
+.kpi-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+.kpi-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.ibl{background:var(--blue-dim);color:var(--blue)}
+.ipu{background:var(--purple-dim);color:var(--purple)}
+.igr{background:var(--green-dim);color:var(--green)}
+.iam{background:var(--amber-dim);color:var(--amber)}
+.ird{background:var(--red-dim);color:var(--red)}
+.icy{background:var(--cyan-dim);color:var(--cyan)}
+.ior{background:var(--orange-dim);color:var(--orange)}
+.iid{background:var(--indigo-dim);color:var(--indigo)}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-hint);margin-bottom:4px}
+.kpi-value{font-size:20px;font-weight:800;line-height:1;letter-spacing:-0.5px;margin-bottom:3px;font-family:'JetBrains Mono',monospace}
+.kpi-sub{font-size:10px;color:var(--text-muted)}
+
+/* CHARTS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.chart-wrap{position:relative;height:200px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:480px}
+thead{background:var(--surface2)}
+th{padding:9px 13px;color:var(--text-hint);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:11px}
+.td-bold{font-weight:700}
+.td-muted{color:var(--text-muted)}
+.td-blue{color:var(--blue)}
+
+/* BADGES */
+.badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.bg{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.ba{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,217,76,.2)}
+.br{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.bb{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(56,189,248,.2)}
+.bp{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(192,132,252,.2)}
+.bm{background:var(--surface3);color:var(--text-muted);border:1px solid var(--border)}
+.bc{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(34,211,238,.2)}
+.bo{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(251,146,60,.2)}
+.bid{background:var(--indigo-dim);color:var(--indigo);border:1px solid rgba(129,140,248,.2)}
+
+/* ESTADO visual badges — cores escurecidas para contraste WCAG AA sobre fundo branco */
+.estado-excelente{background:rgba(20,184,166,.12);color:#0F8F80;border:1px solid rgba(20,184,166,.28)}
+.estado-bom{background:rgba(124,58,237,.10);color:#7C3AED;border:1px solid rgba(124,58,237,.25)}
+.estado-regular{background:rgba(245,158,11,.12);color:#B45309;border:1px solid rgba(245,158,11,.28)}
+.estado-ruim{background:rgba(251,146,60,.12);color:#C2410C;border:1px solid rgba(251,146,60,.28)}
+.estado-sucata{background:rgba(239,68,68,.10);color:#DC2626;border:1px solid rgba(239,68,68,.25)}
+
+/* DESTINO badges — cores escurecidas para contraste WCAG AA sobre fundo branco */
+.destino-venda{background:rgba(20,184,166,.10);color:#0F8F80;border:1px solid rgba(20,184,166,.25)}
+.destino-descarte{background:rgba(239,68,68,.10);color:#DC2626;border:1px solid rgba(239,68,68,.25)}
+.destino-reaproveitamento{background:rgba(124,58,237,.10);color:#7C3AED;border:1px solid rgba(124,58,237,.22)}
+.destino-doacao{background:rgba(168,85,247,.10);color:#9333EA;border:1px solid rgba(168,85,247,.25)}
+.destino-reserva{background:rgba(245,158,11,.10);color:#B45309;border:1px solid rgba(245,158,11,.25)}
+
+/* FORMS */
+.form-group{margin-bottom:11px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;min-width:0}
+label{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-hint);margin-bottom:4px}
+.fc{width:100%;padding:8px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12.5px;font-family:'Sora',inherit;transition:border-color .15s,box-shadow .15s}
+.fc:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.fc::placeholder{color:var(--text-hint)}
+textarea.fc{resize:vertical;min-height:60px}
+select.fc option{background:var(--surface2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-xl);width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.modal-lg{max-width:760px}
+.modal-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:14px;font-weight:700}
+.modal-close{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all .15s}
+.modal-close:hover{color:var(--text);background:var(--surface3)}
+.modal-close svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.modal-body{padding:18px;overflow-y:auto;flex:1}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+
+/* FOTO */
+.foto-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:18px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2)}
+.foto-zone:hover{border-color:var(--blue);background:var(--blue-dim)}
+.foto-prev{width:100%;max-height:100px;object-fit:cover;border-radius:8px;display:none;margin-bottom:8px}
+.foto-ph svg{width:24px;height:24px;stroke:currentColor;fill:none;color:var(--text-hint);margin:0 auto 8px;display:block;opacity:.4;stroke-width:1.5}
+.foto-ph p{font-size:11px;color:var(--text-hint)}
+
+/* ALERTS */
+.alert{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:var(--radius-lg);font-size:12px;font-weight:500;margin-bottom:8px;border:1px solid}
+.alert-warn{background:var(--amber-dim);border-color:rgba(251,217,76,.25);color:var(--amber)}
+.alert-danger{background:var(--red-dim);border-color:rgba(248,113,113,.25);color:var(--red)}
+.alert-info{background:var(--blue-dim);border-color:rgba(56,189,248,.25);color:var(--blue)}
+.alert-success{background:var(--green-dim);border-color:rgba(52,211,153,.25);color:var(--green)}
+.alert svg{width:13px;height:13px;flex-shrink:0;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;padding:11px 16px;border-radius:var(--radius-lg);font-size:12px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .25s;z-index:500;pointer-events:none;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-light);font-family:'JetBrains Mono',monospace}
+.toast.show{opacity:1;transform:none}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.sbox{position:relative;flex:1;min-width:140px;max-width:240px}
+.sbox svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;color:var(--text-hint)}
+.sbox input{width:100%;padding:7px 11px 7px 28px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Sora',inherit}
+.sbox input:focus{outline:none;border-color:var(--blue)}
+.sbox input::placeholder{color:var(--text-hint)}
+.fc-sm{padding:6px 9px;font-size:11px;width:auto}
+
+/* MOVIMENTAÇÕES */
+.mov-layout{display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start;min-width:0;width:100%}
+.mov-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:12px 14px;position:sticky;top:0;min-width:0;overflow:hidden;box-sizing:border-box}
+.ttabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:11px}
+.ttab{padding:7px 4px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-muted);transition:all .15s;font-family:'Sora',inherit;word-break:break-word}
+.ttab svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.ttab.entrada.active{background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,.3)}
+.ttab.saida.active{background:var(--red-dim);color:var(--red);border-color:rgba(248,113,113,.3)}
+.ttab.ajuste.active{background:var(--amber-dim);color:var(--amber);border-color:rgba(251,217,76,.3)}
+.ttab.transferencia.active{background:var(--blue-dim);color:var(--blue);border-color:rgba(56,189,248,.3)}
+
+/* TIMELINE */
+.tl-item{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid}
+.tl-dot svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.dl-entrada{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.dl-saida{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.dl-ajuste{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.dl-exclusao{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.dl-sistema{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+.dl-transferencia{background:var(--indigo-dim);border-color:var(--indigo);color:var(--indigo)}
+.tl-body{flex:1;min-width:0}
+.tl-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.tl-meta{font-size:10px;color:var(--text-muted);display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace}
+.tl-detail{margin-top:5px;padding:6px 9px;background:var(--surface2);border-radius:var(--radius);font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+/* MISC */
+.ins-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 12px;display:flex;align-items:flex-start;gap:9px;margin-bottom:8px}
+.ins-icon{width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.ins-text{font-size:12px;color:var(--text-muted);line-height:1.5}
+.ins-text strong{color:var(--text);font-weight:600}
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.empty-state{text-align:center;padding:36px 20px;color:var(--text-hint)}
+.empty-state svg{width:34px;height:34px;stroke:currentColor;fill:none;stroke-width:1.5;margin:0 auto 10px;display:block;opacity:.2}
+.empty-state p{font-size:13px}
+.ind-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0;vertical-align:middle}
+.dn{background:var(--green);box-shadow:0 0 4px var(--green)}
+.dw{background:var(--amber);box-shadow:0 0 4px var(--amber)}
+.dc{background:var(--red);box-shadow:0 0 4px var(--red);animation:blink 1.2s infinite}
+.qty-bar{height:3px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-top:3px}
+.qty-fill{height:100%;border-radius:4px}
+.qh{background:var(--green)}
+.qm{background:var(--amber)}
+.ql{background:var(--red)}
+.act{display:flex;gap:4px}
+.lbtn{font-size:11px;font-weight:600;color:var(--text-hint);background:none;border:1px solid transparent;cursor:pointer;padding:3px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;transition:all .15s}
+.lbtn:hover{background:var(--surface3);color:var(--text);border-color:var(--border)}
+.lbtn.d:hover{color:var(--red);background:var(--red-dim)}
+.thumb{width:28px;height:21px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle}
+.no-img{font-size:9px;color:var(--text-hint);padding:2px 5px;background:var(--surface3);border-radius:4px;border:1px solid var(--border)}
+.lote-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:var(--indigo-dim);color:var(--indigo);border:1px solid rgba(129,140,248,.2);font-family:'JetBrains Mono',monospace}
+.prop-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;transition:border-color .15s}
+.prop-card:hover{border-color:var(--border-light)}
+
+/* USER MANAGEMENT */
+.role-badge-admin{background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(251,146,60,.15));color:var(--orange);border:1px solid rgba(251,146,60,.3)}
+.role-badge-operador{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(56,189,248,.25)}
+.role-badge-consulta{background:var(--surface3);color:var(--text-muted);border:1px solid var(--border)}
+
+/* BACKUP/RESTORE */
+.backup-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;text-align:center;cursor:pointer;transition:all .2s}
+.backup-card:hover{border-color:var(--border-light);transform:translateY(-2px)}
+.backup-card svg{width:28px;height:28px;margin:0 auto 10px;display:block;stroke-width:1.5;fill:none;stroke:currentColor}
+
+/* PERM SWITCH */
+.perm-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.perm-row:last-child{border-bottom:none}
+.toggle{position:relative;display:inline-block;width:34px;height:18px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--surface3);border-radius:18px;transition:.3s;border:1px solid var(--border)}
+.slider:before{position:absolute;content:"";height:12px;width:12px;left:2px;bottom:2px;background:var(--text-hint);border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--green-dim);border-color:rgba(52,211,153,.4)}
+input:checked+.slider:before{transform:translateX(16px);background:var(--green)}
+
+/* SECTION HEADER */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.sec-title{font-size:17px;font-weight:800;letter-spacing:-0.3px}
+.sec-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.kpi-grid-6{grid-template-columns:repeat(3,1fr)}.kpi-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}.chart-grid-3{grid-template-columns:1fr 1fr}.mov-layout{grid-template-columns:1fr}.ins-grid{grid-template-columns:1fr}}
+@media(max-width:1000px){.mov-layout{grid-template-columns:1fr}.mov-form{position:relative}.ttabs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.form-row,.form-row-3{grid-template-columns:1fr}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.kpi-grid-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){:root{--sidebar-w:52px}.sidebar-logo .logo-name,.sidebar-logo .logo-tag,.sidebar-logo .logo-ver,.nav-section,.nav-item span,.user-name,.user-role,.user-logout{display:none}.nav-item{justify-content:center;padding:9px}.kpi-grid{grid-template-columns:1fr 1fr}.content{padding:10px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+      <div>
+        <div class="login-title">MAXX</div>
+        <div style="font-size:10px;color:var(--text-muted)">Sistema de Gestão v3.0</div>
+      </div>
+    </div>
+    <div class="login-sub">Acesse com seu e-mail corporativo</div>
+    <div id="login-err" class="login-err">E-mail ou senha incorretos.</div>
+    <div class="form-group"><label>E-mail</label><input class="fc" id="l-usr" type="email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="email"></div>
+    <div class="form-group"><label>Senha</label><input class="fc" type="password" id="l-pwd" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;padding:11px" onclick="doLogin()">
+      <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Entrar
+    </button>
+    <div style="text-align:center;margin-top:18px;font-size:10px;color:var(--text-hint)">
+      <span class="dot"></span>MAXX v3.0 — Acesso seguro
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+    <div><div class="logo-name">MAXX</div><div class="logo-tag">ERP Sistema</div></div>
+    <span class="logo-ver">v3.0</span>
+  </div>
+  <div class="nav-section">Principal</div>
+  <button class="nav-item active" onclick="nav('dashboard',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+  <button class="nav-item" onclick="nav('estoque',this)"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg><span>Estoque</span><span class="nav-badge" id="badge-al" style="display:none">0</span></button>
+  <button class="nav-item" onclick="nav('produtos',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M12 2v2M12 20v2M2 12h2M20 12h2"/></svg><span>Produtos</span></button>
+  <button class="nav-item" onclick="nav('movs',this)"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span>Movimentações</span></button>
+  <div class="nav-section">Rastreabilidade</div>
+  <button class="nav-item" onclick="nav('fluxo',this)"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Controle de Fluxo</span><span class="nav-badge gr" id="badge-fx">0</span></button>
+  <button class="nav-item" onclick="nav('propostas',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Propostas</span><span class="nav-badge bl" id="badge-pr" style="display:none">0</span></button>
+  <div class="nav-section">Financeiro</div>
+  <button class="nav-item" onclick="nav('financeiro',this)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Financeiro</span></button>
+  <button class="nav-item" onclick="nav('margem',this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Margem &amp; Preços</span></button>
+  <div class="nav-section">Cadastros</div>
+  <button class="nav-item" onclick="nav('fornecedores',this)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Fornecedores</span></button>
+  <button class="nav-item" onclick="nav('relatorios',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg><span>Relatórios</span></button>
+  <button class="nav-item" id="nav-usuarios" onclick="nav('usuarios',this)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Usuários</span></button>
+  <button class="nav-item" id="nav-config" onclick="nav('config',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M12 2v2M12 20v2M2 12h2M20 12h2"/></svg><span>Configurações</span></button>
+  <div class="sidebar-user">
+    <div class="user-chip" id="userChip">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div><div class="user-name" id="userName">Admin</div><div class="user-role" id="userRole">Administrador</div></div>
+      <button class="user-logout" onclick="doLogout()" title="Sair">↪</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="mainApp" style="display:none">
+  <header class="topbar">
+    <div class="topbar-icon" id="tbIco"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+    <div><div class="topbar-title" id="tbT">Dashboard</div><div class="topbar-sub" id="tbS">Visão geral executiva</div></div>
+    <div class="topbar-right" id="tbA">
+      <div id="alerts-btn" style="position:relative;cursor:pointer" onclick="nav('alertas',null)">
+        <div style="width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--amber)">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <span id="alert-count" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px;display:none;font-family:'JetBrains Mono',monospace">0</span>
+      </div>
+    </div>
+  </header>
+  <div class="content">
+
+<!-- DASHBOARD -->
+<div id="sec-dashboard" class="section active">
+  <div class="sec-hd">
+    <div><div class="sec-title">Dashboard Executivo</div><div class="sec-sub">Visão estratégica do estoque</div></div>
+  </div>
+  <div class="kpi-grid-6" id="dash-kpis6"></div>
+  <div class="kpi-grid" id="dash-kpis4" style="display:none"></div>
+  <div id="dash-alerts-box" style="margin-bottom:14px"></div>
+  <div class="chart-grid">
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Movimentações (6 meses)</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cMovs"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>Top 5 Produtos</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cTop"></canvas></div></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>Destino Final</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cDestino"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Estado dos Equipamentos</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cEstado"></canvas></div></div></div>
+  </div>
+  <div class="ins-grid" id="dash-ins"></div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>Últimas Movimentações</div></div>
+    <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Produto</th><th>Qtd</th><th>Responsável</th><th>Data/Hora</th></tr></thead><tbody id="dash-mtb"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ALERTAS -->
+<div id="sec-alertas" class="section">
+  <div class="sec-hd"><div><div class="sec-title">Central de Alertas</div><div class="sec-sub">Alertas automáticos do sistema</div></div></div>
+  <div id="alertas-list"></div>
+</div>
+
+<!-- ESTOQUE -->
+<div id="sec-estoque" class="section">
+  <div class="kpi-grid" id="est-kpis"></div>
+  <div id="est-al" style="margin-bottom:12px"></div>
+  <div class="toolbar">
+    <div class="sbox"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Buscar produto..." oninput="rEst()" id="est-q"></div>
+    <select class="fc fc-sm" onchange="rEst()" id="est-mk"><option value="">Todas marcas</option></select>
+    <select class="fc fc-sm" onchange="rEst()" id="est-in"><option value="">Todos status</option><option value="crit">Crítico</option><option value="warn">Atenção</option><option value="ok">Normal</option></select>
+    <select class="fc fc-sm" onchange="rEst()" id="est-dest"><option value="">Todos destinos</option><option value="venda">Venda</option><option value="descarte">Descarte</option><option value="reaproveitamento">Reaproveitamento</option><option value="doacao">Doação</option><option value="reserva">Reserva Técnica</option></select>
+    <select class="fc fc-sm" onchange="rEst()" id="est-est"><option value="">Todos estados</option><option value="excelente">Excelente</option><option value="bom">Bom</option><option value="regular">Regular</option><option value="ruim">Ruim</option><option value="sucata">Sucata</option></select>
+  </div>
+  <div class="card"><div class="table-wrap"><table><thead><tr><th>Ind.</th><th>Foto</th><th>Produto</th><th>Marca</th><th>Qtd</th><th>Mín</th><th>Nível</th><th>Status</th><th>Estado</th><th>Destino</th><th>Preço</th><th>Valor</th><th>Ações</th></tr></thead><tbody id="est-tb"></tbody></table>
+  <div class="empty-state" id="est-empty" style="display:none"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg><p>Nenhum produto encontrado.</p></div></div></div>
+</div>
+
+<!-- PRODUTOS -->
+<div id="sec-produtos" class="section">
+  <div class="toolbar">
+    <div class="sbox"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Buscar produto..." oninput="rProd()" id="prod-q"></div>
+    <select class="fc fc-sm" onchange="rProd()" id="prod-mk"><option value="">Todas marcas</option></select>
+    <select class="fc fc-sm" onchange="rProd()" id="prod-dest"><option value="">Todos destinos</option><option value="venda">Venda</option><option value="descarte">Descarte</option><option value="reaproveitamento">Reaproveitamento</option><option value="doacao">Doação</option><option value="reserva">Reserva Técnica</option></select>
+    <div id="prod-novo-btn"></div>
+  </div>
+  <div class="card"><table><thead><tr><th>Ind.</th><th>Foto</th><th>Produto</th><th>Marca</th><th>Qtd</th><th>Mín</th><th>Status</th><th>Estado</th><th>Aparência</th><th>Destino</th><th>Preço</th><th>Margem</th><th>ABC</th><th>Ações</th></tr></thead><tbody id="prod-tb"></tbody></table>
+  <div class="empty-state" id="prod-empty" style="display:none"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg><p>Nenhum produto cadastrado.</p></div></div>
+</div>
+
+<!-- MOVIMENTAÇÕES -->
+<div id="sec-movs" class="section">
+  <div class="mov-layout">
+    <div class="mov-form">
+      <div style="font-size:12.5px;font-weight:700;margin-bottom:11px">Registrar Movimentação</div>
+      <div class="ttabs">
+        <button class="ttab entrada active" id="tt-ent" onclick="sMT('entrada')"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Entrada</button>
+        <button class="ttab saida" id="tt-sai" onclick="sMT('saida')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>Saída</button>
+        <button class="ttab ajuste" id="tt-adj" onclick="sMT('ajuste')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>Ajuste</button>
+        <button class="ttab transferencia" id="tt-trf" onclick="sMT('transferencia')"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>Transf.</button>
+      </div>
+      <div class="form-group"><label>Produto</label><select class="fc" id="mov-prod"></select></div>
+      <div class="form-group"><label>Classificação</label><select class="fc" id="mov-cls"><option value="">— Selecione —</option><option value="venda">Venda</option><option value="compra">Compra/Reposição</option><option value="troca">Troca</option><option value="devolucao">Devolução</option><option value="perda">Perda/Avaria</option><option value="conferencia">Conferência</option><option value="transferencia">Transferência</option><option value="outros">Outros</option></select></div>
+      <div class="form-row"><div class="form-group"><label>Quantidade</label><input class="fc" type="number" id="mov-qtd" value="1" min="1"></div><div class="form-group"><label>Data</label><input class="fc" type="date" id="mov-dt"></div></div>
+      <div class="form-row"><div class="form-group"><label>Hora</label><input class="fc" type="time" id="mov-hr"></div><div class="form-group"><label>Lote</label><input class="fc" id="mov-lot" placeholder="Opcional"></div></div>
+      <div class="form-group" id="mov-dg"><label id="mov-dl">Origem</label><input class="fc" id="mov-dst" placeholder="Fornecedor, local..."></div>
+      <div class="form-group" id="mov-ag" style="display:none"><label>Qtd. correta final</label><input class="fc" type="number" id="mov-afv" min="0"></div>
+      <div class="form-group"><label>Responsável</label><input class="fc" id="mov-rsp" placeholder="Seu nome..."></div>
+      <div class="form-group"><label>Observações</label><textarea class="fc" id="mov-obs" rows="2"></textarea></div>
+      <div id="mov-registrar-btn"></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:10px"><div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:11px 14px">
+        <div><div class="kpi-label">Total</div><div style="font-size:19px;font-weight:800;color:var(--blue);font-family:'JetBrains Mono',monospace" id="ms-tot">0</div></div>
+        <div><div class="kpi-label">Entradas</div><div style="font-size:19px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace" id="ms-ent">0</div></div>
+        <div><div class="kpi-label">Saídas</div><div style="font-size:19px;font-weight:800;color:var(--red);font-family:'JetBrains Mono',monospace" id="ms-sai">0</div></div>
+      </div></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>Histórico</div>
+          <div style="display:flex;gap:6px">
+            <div class="sbox" style="max-width:130px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Buscar..." oninput="rMovL()" id="movl-q" style="font-size:11px"></div>
+            <select class="fc fc-sm" onchange="rMovL()" id="movl-f"><option value="">Todos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option><option value="ajuste">Ajustes</option><option value="transferencia">Transf.</option></select>
+          </div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Produto</th><th>Qtd</th><th>Data/Hora</th><th>Responsável</th><th>Origem/Destino</th><th>Class.</th><th>Lote</th><th>Obs.</th><th></th></tr></thead><tbody id="movl-tb"></tbody></table>
+        <div class="empty-state" id="movl-empty" style="display:none"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg><p>Nenhuma movimentação.</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FLUXO -->
+<div id="sec-fluxo" class="section">
+  <div class="alert alert-info" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><strong>Log Imutável.</strong> Todos os registros são permanentes. Auditoria completa.</div></div>
+  <div class="card" style="margin-bottom:12px"><div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:11px 14px">
+    <div><div class="kpi-label">Total logs</div><div style="font-size:19px;font-weight:800;color:var(--blue);font-family:'JetBrains Mono',monospace" id="fx-tot">0</div></div>
+    <div><div class="kpi-label">Entradas</div><div style="font-size:19px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace" id="fx-ent">0</div></div>
+    <div><div class="kpi-label">Saídas</div><div style="font-size:19px;font-weight:800;color:var(--red);font-family:'JetBrains Mono',monospace" id="fx-sai">0</div></div>
+    <div><div class="kpi-label">Outros</div><div style="font-size:19px;font-weight:800;color:var(--amber);font-family:'JetBrains Mono',monospace" id="fx-out">0</div></div>
+  </div></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Timeline de Auditoria <span class="badge bg" style="margin-left:6px">PERMANENTE</span></div>
+      <div style="display:flex;gap:6px">
+        <div class="sbox" style="max-width:150px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Buscar..." oninput="rFlux()" id="fx-q"></div>
+        <select class="fc fc-sm" onchange="rFlux()" id="fx-f"><option value="">Todos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option><option value="ajuste">Ajustes</option><option value="exclusao">Exclusões</option><option value="sistema">Sistema</option></select>
+      </div>
+    </div>
+    <div class="card-body"><div id="fx-tl"></div><div class="empty-state" id="fx-empty" style="display:none"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/></svg><p>Nenhum log.</p></div></div>
+  </div>
+</div>
+
+<!-- PROPOSTAS -->
+<div id="sec-propostas" class="section">
+  <div class="card" style="margin-bottom:12px"><div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:11px 14px" id="pr-kpis"></div></div>
+  <div style="display:grid;grid-template-columns:390px 1fr;gap:14px;align-items:start">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span id="pr-ft">Nova Proposta</span></div></div>
+      <div class="card-body">
+        <input type="hidden" id="pr-eid">
+        <div class="form-group"><label>Nome</label><input class="fc" id="pr-nm" placeholder="Nome da proposta..."></div>
+        <div class="form-row"><div class="form-group"><label>Cliente</label><input class="fc" id="pr-cl" placeholder="Cliente..."></div><div class="form-group"><label>Responsável</label><input class="fc" id="pr-rs" placeholder="Seu nome..."></div></div>
+        <div class="form-group"><label>Produto vinculado</label>
+          <select class="fc" id="pr-prod-sel" onchange="onPropProdSelect()">
+            <option value="">— Selecione um produto —</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Equipamentos (descrição)</label><input class="fc" id="pr-eq" placeholder="Descrição adicional..."></div>
+        <div class="form-row"><div class="form-group"><label>Quantidade</label><input class="fc" type="number" id="pr-qt" oninput="cPL()" min="1" value="1"></div><div class="form-group"><label>Lote</label><input class="fc" id="pr-lt" placeholder="Opcional"></div></div>
+        <div class="form-row"><div class="form-group"><label>Valor recebido (R$)</label><input class="fc" type="number" id="pr-vr" oninput="cPL()" step="0.01"></div><div class="form-group"><label>Valor de saída (R$)</label><input class="fc" type="number" id="pr-vs" oninput="cPL()" step="0.01"></div></div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:9px 13px;display:flex;justify-content:space-between;margin-bottom:11px"><span style="font-size:11px;color:var(--text-muted);font-weight:600">Lucro estimado:</span><span id="pr-lc" style="font-weight:800;font-size:14px;color:var(--green);font-family:'JetBrains Mono',monospace">R$ 0,00</span></div>
+        <div class="form-row"><div class="form-group"><label>Data</label><input class="fc" type="date" id="pr-dt"></div><div class="form-group"><label>Status</label><select class="fc" id="pr-st"><option value="analise">Em análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="finalizado">Finalizado</option></select></div></div>
+        <div class="form-group"><label>Observações</label><textarea class="fc" id="pr-ob" rows="2"></textarea></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1;justify-content:center" onclick="sProp()"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="pr-bl">Registrar</span></button><button class="btn" onclick="cPropE()" id="pr-cb" style="display:none">Cancelar</button></div>
+      </div>
+    </div>
+    <div><div class="card">
+      <div class="card-header">
+        <div class="card-title"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>Propostas</div>
+        <div style="display:flex;gap:6px"><div class="sbox" style="max-width:130px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Buscar..." oninput="rProps()" id="pr-q" style="font-size:11px"></div><select class="fc fc-sm" onchange="rProps()" id="pr-flt"><option value="">Todos</option><option value="analise">Análise</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="finalizado">Finalizado</option></select></div>
+      </div>
+      <div id="pr-list" style="padding:12px;display:flex;flex-direction:column;gap:8px"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- FINANCEIRO -->
+<div id="sec-financeiro" class="section">
+  <div class="kpi-grid" id="fin-kpis"></div>
+  <div class="chart-grid">
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Valor por Marca</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cFin"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Distribuição ABC</div></div><div class="card-body"><div class="chart-wrap"><canvas id="cAbc"></canvas></div></div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">Análise por Produto</div></div>
+  <div class="table-wrap"><table><thead><tr><th>Produto</th><th>Estoque</th><th>P. mín.</th><th>P. ideal</th><th>P. máx.</th><th>Margem</th><th>Valor</th><th>ABC</th></tr></thead><tbody id="fin-tb"></tbody></table></div></div>
+</div>
+
+<!-- MARGEM -->
+<div id="sec-margem" class="section">
+  <div class="alert alert-info" style="margin-bottom:12px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Preços configurados no cadastro de cada produto. Margem calculada entre preço mínimo e preço ideal.</div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Margem e Precificação</div></div>
+  <div class="table-wrap"><table><thead><tr><th>Produto</th><th>Estoque</th><th>P. mínimo</th><th>P. ideal</th><th>P. máximo</th><th>Margem %</th><th>Status preço</th></tr></thead><tbody id="mg-tb"></tbody></table></div></div>
+</div>
+
+<!-- FORNECEDORES -->
+<div id="sec-fornecedores" class="section">
+  <div class="toolbar"><div id="forn-novo-btn"></div></div>
+  <div class="card"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Contato</th><th>Email</th><th>Telefone</th><th>Produtos</th><th>Ações</th></tr></thead><tbody id="fn-tb"></tbody></table>
+  <div class="empty-state" id="fn-empty" style="display:none"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Nenhum fornecedor.</p></div></div></div>
+</div>
+
+<!-- RELATÓRIOS -->
+<div id="sec-relatorios" class="section">
+  <div class="card"><div class="card-header"><div class="card-title">Exportar Relatórios CSV</div></div>
+  <div class="card-body"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+    <div class="backup-card" onclick="gRel('estoque')" style="color:var(--blue)"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg><div style="font-weight:700;font-size:13px;margin-bottom:3px">Posição de Estoque</div><div style="font-size:11px;color:var(--text-muted)">Exportar CSV completo</div></div>
+    <div class="backup-card" onclick="gRel('movs')" style="color:var(--green)"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg><div style="font-weight:700;font-size:13px;margin-bottom:3px">Movimentações</div><div style="font-size:11px;color:var(--text-muted)">Exportar CSV completo</div></div>
+    <div class="backup-card" onclick="gRel('fin')" style="color:var(--amber)"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div style="font-weight:700;font-size:13px;margin-bottom:3px">Financeiro</div><div style="font-size:11px;color:var(--text-muted)">Exportar CSV completo</div></div>
+  </div></div></div>
+</div>
+
+<!-- USUÁRIOS -->
+<div id="sec-usuarios" class="section">
+  <div class="toolbar"><button class="btn btn-primary" onclick="openUserModal()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo usuário</button></div>
+  <div class="card"><div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Status</th><th>Último acesso</th><th>Ações</th></tr></thead><tbody id="usr-tb"></tbody></table></div></div>
+</div>
+
+<!-- CONFIGURAÇÕES -->
+<div id="sec-config" class="section">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Backup e Restauração</div></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Exportar e importar todos os dados do sistema. O backup inclui produtos, movimentações, fornecedores, propostas e logs.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div class="backup-card" onclick="exportBackup()" style="color:var(--green)">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <div style="font-weight:700;font-size:12px;margin-bottom:3px">Exportar Backup</div>
+              <div style="font-size:10px;color:var(--text-muted)">Salvar JSON completo</div>
+            </div>
+            <div class="backup-card" onclick="document.getElementById('bk-file').click()" style="color:var(--blue)">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-weight:700;font-size:12px;margin-bottom:3px">Importar Backup</div>
+              <div style="font-size:10px;color:var(--text-muted)">Restaurar de JSON</div>
+            </div>
+          </div>
+          <input type="file" id="bk-file" accept=".json" style="display:none" onchange="importBackup(this)">
+          <div class="alert alert-warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><div>Importar um backup <strong>substitui todos os dados</strong> atuais. Exporte primeiro.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Informações do Sistema</div></div>
+        <div class="card-body" id="sys-info"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Supabase</div></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Conecte o MAXX ao Supabase para sincronização em tempo real entre múltiplos usuários, armazenamento seguro no PostgreSQL e upload de imagens no Storage.</p>
+          <button class="btn btn-primary" id="supa-cfg-btn" onclick="openSupaCfg()" style="width:100%;justify-content:center">
+            <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Conectar Supabase
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Limpar Dados</div></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Atenção: estas ações são irreversíveis. Exporte um backup antes de prosseguir.</p>
+          <button class="btn btn-danger" style="width:100%;justify-content:center;margin-bottom:8px" onclick="clearMovs()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Limpar movimentações</button>
+          <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="clearAll()"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Resetar tudo (manter usuários)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div></div><!-- /content /main -->
+
+
+<!-- MODALS -->
+<div class="modal-overlay" id="m-prod">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title" id="m-prod-t">Novo Produto</div><button class="modal-close" onclick="cM('m-prod')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="mp-id">
+      <div class="form-row">
+        <div>
+          <div class="form-group"><label>Nome do produto *</label><input class="fc" id="mp-nm" placeholder="Nome do produto..."></div>
+          <div class="form-row"><div class="form-group"><label>Marca</label><input class="fc" id="mp-mk" list="mk-list" placeholder="Marca..."><datalist id="mk-list"></datalist></div><div class="form-group"><label>Modelo</label><input class="fc" id="mp-mo" placeholder="Modelo..."></div></div>
+          <div class="form-row"><div class="form-group"><label>Categoria</label><input class="fc" id="mp-ct" list="ct-list" placeholder="Categoria..."><datalist id="ct-list"></datalist></div><div class="form-group"><label>Subcategoria</label><input class="fc" id="mp-sc" placeholder="Subcategoria..."></div></div>
+          <div class="form-row"><div class="form-group"><label>Nº Série</label><input class="fc" id="mp-ns" placeholder="S/N..."></div><div class="form-group"><label>Patrimônio</label><input class="fc" id="mp-pt" placeholder="Nº patrimônio..."></div></div>
+        </div>
+        <div>
+          <div class="form-group"><label>Foto do produto</label>
+            <div class="foto-zone" onclick="document.getElementById('mp-foto-in').click()">
+              <img class="foto-prev" id="mp-foto-prev"><input type="file" id="mp-foto-in" accept="image/*" style="display:none" onchange="onFoto(this)">
+              <div class="foto-ph" id="mp-foto-ph"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p>Clique para adicionar foto</p></div>
+            </div>
+          </div>
+          <div class="form-group"><label>Fornecedor</label><select class="fc" id="mp-fn"><option value="">— Nenhum —</option></select></div>
+          <div class="form-group"><label>Localização</label><input class="fc" id="mp-lc" placeholder="Prateleira, sala, almoxarifado..."></div>
+        </div>
+      </div>
+      <hr style="border-color:var(--border);margin:10px 0">
+      <div class="form-row-3">
+        <div class="form-group"><label>Estado *</label><select class="fc" id="mp-es"><option value="">— Selecione —</option><option value="excelente">Excelente</option><option value="bom">Bom</option><option value="regular">Regular</option><option value="ruim">Ruim</option><option value="sucata">Sucata</option></select></div>
+        <div class="form-group"><label>Aparência</label><select class="fc" id="mp-ap"><option value="">— Selecione —</option><option value="novo">Novo</option><option value="conservado">Conservado</option><option value="lev_amarelado">Levemente Amarelado</option><option value="muito_amarelado">Muito Amarelado</option><option value="danificado">Danificado</option></select></div>
+        <div class="form-group"><label>Destino Final</label><select class="fc" id="mp-dt"><option value="">— Opcional —</option><option value="venda">Venda</option><option value="descarte">Descarte</option><option value="reaproveitamento">Reaproveitamento</option><option value="doacao">Doação</option><option value="reserva">Reserva Técnica</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Status Comercial</label><select class="fc" id="mp-sc2"><option value="disponivel">Disponível</option><option value="anunciado">Anunciado</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option><option value="descartado">Descartado</option></select></div>
+        <div class="form-group"><label>Classificação ABC</label><select class="fc" id="mp-ab"><option value="A">A — Alta rotatividade</option><option value="B">B — Média rotatividade</option><option value="C">C — Baixa rotatividade</option></select></div>
+        <div class="form-group"><label>Tags</label><input class="fc" id="mp-tg" placeholder="tag1, tag2..."></div>
+      </div>
+      <hr style="border-color:var(--border);margin:10px 0">
+      <div class="form-row">
+        <div class="form-group"><label>Qtd inicial</label><input class="fc" type="number" id="mp-qi" value="0" min="0"></div>
+        <div class="form-group"><label>Qtd mínima alerta</label><input class="fc" type="number" id="mp-qm" value="1" min="0"></div>
+        <input type="hidden" id="mp-qx" value="100">
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Preço mínimo (R$)</label><input class="fc" type="number" id="mp-pm" step="0.01" value="0"></div>
+        <div class="form-group"><label>Preço ideal (R$)</label><input class="fc" type="number" id="mp-pi" step="0.01" value="0"></div>
+        <div class="form-group"><label>Preço máximo (R$)</label><input class="fc" type="number" id="mp-px" step="0.01" value="0"></div>
+      </div>
+      <div class="form-group"><label>Observações</label><textarea class="fc" id="mp-ob" rows="2" placeholder="Informações adicionais..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="cM('m-prod')">Cancelar</button><button class="btn btn-primary" onclick="sProd()"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="mp-bl">Salvar produto</span></button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-forn">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Fornecedor</div><button class="modal-close" onclick="cM('m-forn')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="mf-id">
+      <div class="form-group"><label>Nome *</label><input class="fc" id="mf-nm" placeholder="Nome do fornecedor..."></div>
+      <div class="form-row"><div class="form-group"><label>Contato</label><input class="fc" id="mf-ct" placeholder="Nome do contato..."></div><div class="form-group"><label>Telefone</label><input class="fc" id="mf-tf" placeholder="(00) 00000-0000"></div></div>
+      <div class="form-row"><div class="form-group"><label>Email</label><input class="fc" id="mf-em" placeholder="email@..."></div><div class="form-group"><label>CNPJ</label><input class="fc" id="mf-cn" placeholder="00.000.000/0001-00"></div></div>
+      <div class="form-group"><label>Observações</label><textarea class="fc" id="mf-ob" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="cM('m-forn')">Cancelar</button><button class="btn btn-primary" onclick="sForn()"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-user">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="mu-t">Novo Usuário</div><button class="modal-close" onclick="cM('m-user')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="mu-id">
+      <div class="form-row"><div class="form-group"><label>E-mail *</label><input class="fc" id="mu-em" type="email" placeholder="usuario@empresa.com"></div><div class="form-group"><label>Nome completo *</label><input class="fc" id="mu-nm" placeholder="Nome..."></div></div>
+      <div class="form-row"><div class="form-group"><label>Senha * <span style="font-size:9px;color:var(--text-hint)">(mín. 8 chars)</span></label><input class="fc" type="password" id="mu-pw" placeholder="Senha..."></div><div class="form-group"><label>Confirmar senha</label><input class="fc" type="password" id="mu-c2" placeholder="Confirmar..."></div></div>
+      <div class="form-row"><div class="form-group"><label>Perfil *</label><select class="fc" id="mu-rl"><option value="consulta">Consulta</option><option value="operador">Operador</option><option value="admin">Administrador</option></select></div><div class="form-group"><label>Login (alias)</label><input class="fc" id="mu-us" placeholder="Preenchido automaticamente"></div></div>
+      <div class="form-group"><label>Status</label><select class="fc" id="mu-st"><option value="ativo">Ativo</option><option value="bloqueado">Bloqueado</option></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="cM('m-user')">Cancelar</button><button class="btn btn-primary" onclick="sUser()"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="mu-bl">Criar usuário</span></button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: Configuração Supabase -->
+<div class="modal-overlay" id="m-supa">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Configurar Supabase</div>
+      <button class="modal-close" onclick="cM('m-supa')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="margin-bottom:14px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Após configurar, o MAXX sincronizará todos os dados com o Supabase. Os dados locais serão migrados automaticamente.</div></div>
+      <div class="form-group"><label>Supabase URL *</label><input class="fc" id="supa-url" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
+      <div class="form-group"><label>Supabase Anon Key *</label><input class="fc" id="supa-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></div>
+      <div class="form-group"><label>Storage Bucket (imagens)</label><input class="fc" id="supa-bucket" placeholder="matrix-imagens" value="matrix-imagens"></div>
+      <div id="supa-test-result" style="margin-top:10px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cM('m-supa')">Cancelar</button>
+      <button class="btn btn-green" onclick="testSupaConn()"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>Testar conexão</button>
+      <button class="btn btn-primary" onclick="saveSupaCfg()"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Salvar e conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Progresso de migração -->
+<div class="modal-overlay" id="m-migrate">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🔄 Migrando dados para Supabase...</div></div>
+    <div class="modal-body">
+      <div id="migrate-log" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);max-height:280px;overflow-y:auto;background:var(--surface2);padding:12px;border-radius:8px;border:1px solid var(--border)"></div>
+      <div style="margin-top:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);height:8px;overflow:hidden">
+        <div id="migrate-bar" style="height:100%;background:linear-gradient(90deg,var(--blue),var(--indigo));border-radius:8px;width:0%;transition:width .3s"></div>
+      </div>
+      <div id="migrate-status" style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center">Iniciando...</div>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════════════
+// MATRIX — Camada de Abstração de Dados (DataAdapter)
+// Etapa 3: Preparação para PostgreSQL / Supabase / multiusuário
+//
+// Arquitetura em 3 camadas:
+//   UI  →  DataAdapter  →  StorageDriver (local | supabase | postgres)
+//
+// Para migrar para Supabase no futuro, basta:
+//   1. Implementar SupabaseDriver com os mesmos métodos de LocalDriver
+//   2. Trocar: DataAdapter.setDriver(new SupabaseDriver(supabaseClient))
+//   3. A UI permanece 100% intacta.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Schema de referência PostgreSQL (documentação inline) ─────────────────
+// Mapeia cada entidade local para a futura tabela PG equivalente.
+// Usado como contrato durante a migração incremental.
+const SCHEMA_REF = {
+  // tabela: produtos
+  // colunas: id uuid PK, nome text NOT NULL, marca text, modelo text,
+  //   categoria text, subcategoria text, n_serie text, patrimonio text,
+  //   estado text CHECK(estado IN ('excelente','bom','regular','ruim','sucata')),
+  //   aparencia text, destino text NOT NULL, status_com text, abc char(1),
+  //   qtd int DEFAULT 0, qmin int DEFAULT 1, qmax int DEFAULT 100,
+  //   preco numeric(12,2), pmin numeric(12,2), pmax numeric(12,2),
+  //   fornecedor_id uuid REFERENCES fornecedores(id),
+  //   foto_url text,  -- armazenamento externo (Supabase Storage / S3)
+  //   obs text, local text, tags text, criado timestamptz, upd timestamptz,
+  //   org_id uuid  -- multitenancy: isola dados por organização
+  produtos: 'produtos',
+
+  // tabela: movimentacoes (append-only — nunca update, só insert/soft-delete)
+  // colunas: id uuid PK, tipo text, prod_id uuid FK, prod_nome text,
+  //   qtd int, dt date, hr time, ts timestamptz, lote text,
+  //   classificacao text, destino text, obs text,
+  //   user_id uuid FK, user_nome text,
+  //   hash text UNIQUE,  -- integridade: impede duplicatas
+  //   org_id uuid
+  movimentacoes: 'movimentacoes',
+
+  // tabela: fornecedores
+  // colunas: id uuid PK, nome text, contato text, tel text, email text,
+  //   cnpj text, obs text, criado timestamptz, upd timestamptz, org_id uuid
+  fornecedores: 'fornecedores',
+
+  // tabela: propostas
+  // colunas: id uuid PK, nome text, cliente text, responsavel text,
+  //   equipamentos text, qtd int, lote text, valor_r numeric, valor_s numeric,
+  //   lucro numeric, data date, status text, obs text,
+  //   criado timestamptz, upd timestamptz, org_id uuid
+  propostas: 'propostas',
+
+  // tabela: usuarios (será auth.users no Supabase + tabela profiles)
+  // colunas: id uuid PK (= auth.users.id), login text UNIQUE, nome text,
+  //   perfil text CHECK(perfil IN ('admin','operador','consulta')),
+  //   email text, status text, criado timestamptz, ultimo timestamptz,
+  //   org_id uuid
+  usuarios: 'usuarios',
+
+  // tabela: audit_log (imutável — só INSERT, sem UPDATE/DELETE)
+  // colunas: id uuid PK, tipo text, titulo text, detalhe text,
+  //   prod text, qtd int, user_nome text, user_id uuid FK,
+  //   ts timestamptz, org_id uuid,
+  //   ip text, user_agent text  -- segurança multiusuário
+  fluxo: 'audit_log',
+};
+
+// ── Permissões por perfil (espelha RLS do PostgreSQL/Supabase) ────────────
+// Row Level Security policies serão definidas com base nesta estrutura.
+const PERM_MATRIX = {
+  // perfil: { recurso: [ações permitidas] }
+  admin:    { produtos:['read','create','update','delete'],
+              movimentacoes:['read','create','delete'],
+              fornecedores:['read','create','update','delete'],
+              propostas:['read','create','update','delete'],
+              usuarios:['read','create','update','delete'],
+              fluxo:['read'],
+              config:['read','write'] },
+  operador: { produtos:['read','create','update'],
+              movimentacoes:['read','create'],
+              fornecedores:['read'],
+              propostas:['read','create','update'],
+              usuarios:[],
+              fluxo:['read'],
+              config:[] },
+  consulta: { produtos:['read'],
+              movimentacoes:['read'],
+              fornecedores:['read'],
+              propostas:['read'],
+              usuarios:[],
+              fluxo:[],
+              config:[] },
+};
+
+// ── checkPermMatrix: versão estruturada de checkPerm ──────────────────────
+// Prepara para RLS: cada ação verifica PERM_MATRIX em vez de comparações ad-hoc.
+// Na migração para Supabase, o backend PostgreSQL replicará esta lógica via RLS.
+function checkPermMatrix(recurso, acao){
+  if(!CU) return false;
+  const perms = PERM_MATRIX[CU.perfil];
+  if(!perms) return false;
+  const allowed = perms[recurso] || [];
+  if(!allowed.includes(acao)){
+    const msg = acao==='delete'
+      ? 'Sem permissão para excluir este recurso.'
+      : acao==='create'||acao==='update'
+        ? 'Sem permissão para editar este recurso.'
+        : 'Acesso restrito.';
+    toast(msg,'err');
+    return false;
+  }
+  return true;
+}
+
+// ── StorageDriver local (LocalStorage) ────────────────────────────────────
+// Interface contratual: qualquer driver futuro (Supabase, REST, IndexedDB)
+// deve implementar os mesmos métodos para ser plugado sem alterar a UI.
+const LocalDriver = {
+  name: 'LocalStorage',
+  isAsync: false,
+
+  // Retorna todos os dados (snapshot completo)
+  load(){
+    try{ return JSON.parse(localStorage.getItem('stockpro_v3'))||null; }
+    catch{ return null; }
+  },
+
+  // Persiste snapshot completo
+  persist(data){
+    try{ localStorage.setItem('stockpro_v3', JSON.stringify(data)); return true; }
+    catch(e){
+      console.warn('MATRIX LocalDriver: falha ao persistir',e);
+      return false;
+    }
+  },
+
+  // Exporta snapshot para backup JSON (usado por exportBackup)
+  export(data){ return JSON.stringify(data,null,2); },
+
+  // Importa snapshot de backup JSON
+  import(jsonStr){ return JSON.parse(jsonStr); },
+};
+
+// ── SupabaseDriver: driver assíncrono para Supabase/PostgreSQL ───────────
+// Implementa a mesma interface contratual do LocalDriver.
+// Troca: DataAdapter.setDriver(SupabaseDriver) — UI não muda.
+const SupabaseDriver = {
+  name: 'Supabase',
+  isAsync: true,
+  _client: null,
+  _bucket: 'matrix-imagens',
+  _syncInterval: null,
+  _lastSync: null,
+
+  init(url, key, bucket){
+    // Configura cliente com persistência de sessão — JWT usado pelo RLS
+    this._client = window.supabase?.createClient(url, key, {
+      auth: {
+        persistSession: true,       // JWT persiste entre reloads
+        autoRefreshToken: true,     // renova token antes de expirar
+        detectSessionInUrl: true,   // suporte a magic link / OAuth
+      },
+      global: {
+        headers: { 'x-matrix-ver': '3.0' }, // cabeçalho de diagnóstico
+      },
+    });
+    if(bucket) this._bucket = bucket;
+    return !!this._client;
+  },
+
+  get client(){ return this._client; },
+
+  // Carrega snapshot completo do Supabase (usado na inicialização)
+  async load(){
+    if(!this._client) return null;
+    try{
+      const [prods, forns, movs, props, users, logs] = await Promise.all([
+        this._client.from('produtos').select('*').order('criado'),
+        this._client.from('fornecedores').select('*').order('criado'),
+        this._client.from('movimentacoes').select('*').order('ts',{ascending:false}),
+        this._client.from('propostas').select('*').order('criado',{ascending:false}),
+        this._client.from('usuarios').select('*').order('criado'),
+        this._client.from('audit_log').select('*').order('ts',{ascending:false}).limit(2000),
+      ]);
+      if(prods.error||users.error) throw new Error('Falha ao carregar dados do Supabase');
+      return {
+        produtos: prods.data||[],
+        fornecedores: forns.data||[],
+        movimentacoes: movs.data||[],
+        propostas: props.data||[],
+        usuarios: (users.data||[]).map(u=>({...u, senha: u.senha||''})),
+        fluxo: (logs.data||[]).map(l=>({...l, user: l.user_nome, prod: l.prod||''})),
+        cfg: { empresa:'MATRIX', ver:'3.0', schema_ver:3, org_id: users.data?.[0]?.org_id||null, adapter:'supabase', criado: new Date().toISOString() }
+      };
+    } catch(e){ console.error('SupabaseDriver.load:', e); return null; }
+  },
+
+  // Persiste snapshot via upsert (idempotente — seguro para multiusuário)
+  async persist(data){
+    if(!this._client) return false;
+    // Para o driver Supabase, persist é no-op — mutações são feitas diretamente
+    // via upsertOne/insertOne/deleteOne durante as operações de escrita
+    return true;
+  },
+
+  export(data){ return JSON.stringify(data,null,2); },
+  import(jsonStr){ return JSON.parse(jsonStr); },
+
+  // ── Operações granulares (substitui snapshot completo) ──────────────────
+  async upsertOne(table, row){
+    if(!this._client) return false;
+    // Mapeia campos locais para nomes de coluna PG
+    const mapped = this._mapRow(table, row);
+    const {error} = await this._client.from(table).upsert(mapped, {onConflict:'id'});
+    if(error) console.error(`SupabaseDriver.upsertOne(${table}):`, error);
+    return !error;
+  },
+
+  async insertLog(entry){
+    if(!this._client) return false;
+    const {error} = await this._client.from('audit_log').insert({
+      id: entry.id,
+      tipo: entry.tipo,
+      titulo: entry.titulo,
+      detalhe: entry.detalhe||'',
+      prod: entry.prod||'',
+      qtd: entry.qtd||0,
+      user_nome: entry.user||'Sistema',
+      user_id: entry.user_id||null,
+      org_id: entry.org_id||null,
+      ts: entry.ts||new Date().toISOString(),
+    });
+    if(error) console.error('SupabaseDriver.insertLog:', error);
+    return !error;
+  },
+
+  async deleteOne(table, id){
+    if(!this._client) return false;
+    const {error} = await this._client.from(table).delete().eq('id', id);
+    if(error) console.error(`SupabaseDriver.deleteOne(${table}):`, error);
+    return !error;
+  },
+
+  // Upload de imagem para Supabase Storage
+  // RLS do bucket: autenticado + org_id no path
+  async uploadImage(file, prodId){
+    if(!this._client||!file) return null;
+    try{
+      const ext = file.name.split('.').pop();
+      // Path inclui org_id para isolamento por organização no Storage
+      const orgSlug = DB.cfg?.org_id||'local';
+      const path = `${orgSlug}/produtos/${prodId}.${ext}`;
+      const {error} = await this._client.storage
+        .from(this._bucket)
+        .upload(path, file, {upsert:true, contentType: file.type});
+      if(error) throw error;
+      const {data} = this._client.storage.from(this._bucket).getPublicUrl(path);
+      return data.publicUrl;
+    } catch(e){ console.error('SupabaseDriver.uploadImage:', e); return null; }
+  },
+
+  // FIX ALTO #5: registro dos canais ativos — evita subscrições duplicadas.
+  // Se subscribeRealtime for chamado mais de uma vez na mesma sessão
+  // (ex.: após migração e novamente no próximo _autoConnectSupabase),
+  // os canais anteriores são removidos antes de criar novos.
+  _channels: [],
+
+  // Subscrição realtime para sincronização multiusuário
+  subscribeRealtime(onUpdate){
+    if(!this._client) return;
+    // Remove canais anteriores, se existirem, antes de recriar
+    if(this._channels.length>0){
+      this._channels.forEach(ch=>this._client.removeChannel(ch));
+      this._channels=[];
+    }
+    const tables = ['produtos','movimentacoes','fornecedores','propostas'];
+    tables.forEach(table=>{
+      const ch=this._client.channel(`matrix-${table}`)
+        .on('postgres_changes',{event:'*',schema:'public',table},(payload)=>{
+          console.info(`MATRIX realtime: ${table} ${payload.eventType}`);
+          onUpdate(table, payload);
+        })
+        .subscribe();
+      this._channels.push(ch);
+    });
+  },
+
+  // Mapeia nomes de campo local → coluna PostgreSQL
+  // FIX CRÍTICO #3: defesa em profundidade — mesmo que upsertOne seja chamado
+  // diretamente (fora do DataAdapter), 'senha' nunca chega ao Postgres.
+  _mapRow(table, row){
+    if(table==='movimentacoes'){
+      const {user, prod, ...rest} = row;
+      return {...rest, user_nome: user, prod: prod||''};
+    }
+    if(table==='audit_log'){
+      const {user, ...rest} = row;
+      return {...rest, user_nome: user};
+    }
+    if(table==='usuarios'){
+      const {senha, ...rest} = row;
+      return rest;
+    }
+    return row;
+  },
+};
+
+// ── DataAdapter: fachada de acesso a dados ────────────────────────────────
+// Toda leitura/gravação passa por aqui. Quando Supabase for integrado,
+// DataAdapter.driver será trocado para SupabaseDriver — zero mudanças na UI.
+const DataAdapter = {
+  driver: LocalDriver,
+
+  // Troca de driver em runtime (futura migração)
+  setDriver(newDriver){ this.driver = newDriver; console.info('MATRIX: driver →', newDriver.name); },
+
+  // Carrega dados via driver ativo
+  load(){ return this.driver.load(); },
+
+  // Persiste via driver ativo
+  // FIX ALTO #6: quando o driver Supabase está ativo, o cache local
+  // (LocalStorage via LocalDriver) também passa a usar debounce de 300ms,
+  // assim como o driver local síncrono. Antes, toda chamada a save()
+  // serializava JSON.stringify(DB) completo de forma imediata — em uso
+  // multiusuário com Realtime ativo, cada evento remoto + cada ação local
+  // disparava essa serialização, gerando custo de CPU crescente com o
+  // volume de dados.
+  persist(data, immediate=false){
+    if(this.driver.isAsync){
+      if(immediate){ LocalDriver.persist(data); return; }
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(()=>{ LocalDriver.persist(data); }, 300);
+      return;
+    }
+    if(immediate){ const ok=this.driver.persist(data); if(!ok) toast('Atenção: falha ao salvar.','warn'); return; }
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(()=>{
+      const ok = this.driver.persist(data);
+      if(!ok) toast('Atenção: falha ao salvar dados localmente.','warn');
+    }, 300);
+  },
+
+  // Upsert granular — usado quando Supabase está ativo
+  // FIX CRÍTICO #3: ao sincronizar 'usuarios' com Supabase, o campo 'senha'
+  // (texto plano, usado apenas no fallback local) NUNCA é enviado.
+  // Autenticação real é feita via Supabase Auth (auth_uid) — ver SessionManager.
+  async upsertOne(table, row){
+    if(this.driver.isAsync){
+      if(table==='usuarios'){
+        const {senha, ...rowSemSenha} = row;
+        return this.driver.upsertOne(table, rowSemSenha);
+      }
+      return this.driver.upsertOne(table, row);
+    }
+    return true; // local: já persistido via persist()
+  },
+
+  async insertLog(entry){
+    if(this.driver.isAsync) return this.driver.insertLog(entry);
+    return true;
+  },
+
+  async deleteOne(table, id){
+    if(this.driver.isAsync) return this.driver.deleteOne(table, id);
+    return true;
+  },
+
+  async uploadImage(file, prodId){
+    if(this.driver.isAsync) return this.driver.uploadImage(file, prodId);
+    return null; // local: retorna null, UI usa base64
+  },
+
+  isSupabase(){ return this.driver === SupabaseDriver; },
+  // RLS: get_user_org_id() e get_user_perfil() aplicados via policies no PG
+
+  // Exporta backup
+  exportBackup(data){ return this.driver.export(data); },
+
+  // Importa backup
+  importBackup(jsonStr){ return this.driver.import(jsonStr); },
+};
+
+// ── save() — wrapper que delega ao DataAdapter ────────────────────────────
+let _saveTimer=null;
+function save(immediate=false){ DataAdapter.persist(DB, immediate); }
+
+// ── Utilitários gerais ────────────────────────────────────────────────────
+function debounce(fn,ms=220){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+
+// ── Índices em memória (Map) — espelha chave primária do PostgreSQL ────────
+// Em PG: SELECT * FROM produtos WHERE id = $1 → O(log n) via B-tree index.
+// Aqui: Map.get(id) → O(1). Estrutura alinhada para facilitar migração.
+const IDX={prod:new Map(),forn:new Map(),mov:new Map(),user:new Map()};
+function rebuildIdx(){
+  IDX.prod.clear();DB.produtos.forEach(p=>IDX.prod.set(p.id,p));
+  IDX.forn.clear();DB.fornecedores.forEach(f=>IDX.forn.set(f.id,f));
+  IDX.mov.clear();DB.movimentacoes.forEach(m=>IDX.mov.set(m.id,m));
+  IDX.user.clear();DB.usuarios.forEach(u=>IDX.user.set(u.id,u));
+}
+
+// ── Formatadores Intl (instância única) ───────────────────────────────────
+const _dtFmt=new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const _hrFmt=new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const _curFmt=new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// ─── DB ────────────────────────────────────────────────────────────────────
+// ── initDB: schema local alinhado com PostgreSQL ─────────────────────────
+// cfg.org_id: identificador de organização (multitenancy futuro)
+// cfg.schema_ver: versão do schema — controla migrações incrementais
+// cfg.adapter: identifica o driver ativo no momento do backup
+function initDB(){
+  return {
+    produtos:[],
+    fornecedores:[],
+    movimentacoes:[],
+    fluxo:[],
+    propostas:[],
+    usuarios:[{
+      id:'u1',
+      login:'admin',
+      senha:'Admin@2024', // fallback local apenas — Supabase Auth ignora este campo
+      auth_uid: null,  // preenchido após criação no Supabase Auth
+      nome:'Administrador',
+      perfil:'admin',
+      email:'',
+      status:'ativo',
+      criado:now(),
+      ultimo:'',
+      org_id: null,
+    }],
+    cfg:{
+      empresa:'MATRIX', // nome oficial do sistema
+      ver:'3.0',
+      schema_ver: 6,       // E6: UX + permissões visuais + propostas
+      org_id: null,        // multitenancy: UUID da organização
+      adapter: 'local',    // driver ativo: 'local' | 'supabase' | 'postgres'
+      criado:now(),
+    }
+  };
+}
+function sanitizeDB(data){
+  // Garante estrutura mínima e tipos corretos após importação
+  if(!data||typeof data!=='object') return initDB();
+  const def=initDB();
+  const arrays=['produtos','fornecedores','movimentacoes','fluxo','propostas','usuarios'];
+  arrays.forEach(k=>{if(!Array.isArray(data[k])) data[k]=def[k];});
+  if(!data.cfg||typeof data.cfg!=='object') data.cfg=def.cfg;
+  // Preservar org_id e schema_ver durante sanitização (não sobrescrever)
+  if(data.cfg.org_id===undefined) data.cfg.org_id=null;
+  if(!data.cfg.schema_ver) data.cfg.schema_ver=3;
+  if(!data.cfg.adapter) data.cfg.adapter='local';
+  // Garante ao menos 1 admin ativo
+  const hasAdmin=data.usuarios.some(u=>u.perfil==='admin'&&u.status==='ativo');
+  if(!hasAdmin) data.usuarios.push(def.usuarios[0]);
+  // Sanitiza campos críticos em cada produto
+  data.produtos=data.produtos.map(p=>({...p,
+    qtd:Math.max(0,parseInt(p.qtd)||0),
+    qmin:Math.max(0,parseInt(p.qmin)||0),
+    qmax:Math.max(0,parseInt(p.qmax)||100),
+    preco:Math.max(0,parseFloat(p.preco)||0),
+    pmin:Math.max(0,parseFloat(p.pmin)||0),
+    pmax:Math.max(0,parseFloat(p.pmax)||0),
+    nome:typeof p.nome==='string'?p.nome:'',
+  })).filter(p=>p.nome);
+  return data;
+}
+// ── Carregar DB via DataAdapter (LocalDriver por padrão) ─────────────────
+// Na migração: DataAdapter.load() passará a chamar Supabase/REST async.
+// Neste ponto futuro, initAll() aguardará a Promise antes de renderizar.
+let DB = sanitizeDB(DataAdapter.load()) || initDB();
+rebuildIdx();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH — Autenticação e Sessão
+// Preparado para Supabase Auth:
+//   Local:   credenciais em DB.usuarios (bcrypt futuro)
+//   Supabase: supabase.auth.signInWithPassword({email, password})
+//             CU será populado via supabase.auth.getUser()
+// ═══════════════════════════════════════════════════════════════════════════
+let CU = null; // Usuário corrente — em Supabase: auth.User + perfil da tabela profiles
+
+// ── SessionManager — Supabase Auth (E5: hardening) ───────────────────────
+// Supabase Auth é o mecanismo primário. Local é fallback sem Supabase.
+// Fluxo Supabase: signInWithPassword → JWT → RLS via auth.uid()
+const SessionManager = {
+
+  // signIn: tenta Supabase Auth primeiro, fallback local se não configurado
+  async signIn(email, senha){
+    if(DataAdapter.isSupabase()){
+      try{
+        const {data, error} = await SupabaseDriver._client.auth.signInWithPassword({
+          email: email.trim(),
+          password: senha,
+        });
+        if(error) throw error;
+        // Busca perfil MATRIX do usuário autenticado
+        const authUid = data.user.id;
+        const {data: perfil, error: pe} = await SupabaseDriver._client
+          .from('usuarios')
+          .select('*')
+          .eq('auth_uid', authUid)
+          .eq('status','ativo')
+          .single();
+        if(pe||!perfil) throw new Error('Perfil MATRIX não encontrado para este usuário.');
+        return { user: { ...perfil, _authSession: data.session }, session: data.session };
+      } catch(e){
+        console.warn('SessionManager.signIn Supabase:', e.message);
+        return { error: e.message };
+      }
+    }
+    // Fallback local: credencial por email ou login
+    const usr = DB.usuarios.find(x=>
+      (x.email?.toLowerCase()===email.toLowerCase() || x.login?.toLowerCase()===email.toLowerCase()) &&
+      x.senha===senha &&
+      x.status==='ativo'
+    );
+    if(!usr) return null;
+    return { user: usr, session: { token: uid(), ts: now() } };
+  },
+
+  // signOut: revoga sessão Supabase + limpa estado local
+  async signOut(){
+    if(DataAdapter.isSupabase() && SupabaseDriver._client){
+      await SupabaseDriver._client.auth.signOut().catch(()=>{});
+    }
+    CU = null;
+  },
+
+  // getSession: retorna sessão ativa (local ou Supabase)
+  async getSession(){
+    if(DataAdapter.isSupabase() && SupabaseDriver._client){
+      const {data} = await SupabaseDriver._client.auth.getSession();
+      return data?.session ? { user: CU, session: data.session } : null;
+    }
+    return CU ? { user: CU } : null;
+  },
+
+  // onAuthStateChange: listener para expiração de sessão Supabase
+  listenAuthChanges(){
+    if(!DataAdapter.isSupabase()||!SupabaseDriver._client) return;
+    SupabaseDriver._client.auth.onAuthStateChange((event, session)=>{
+      if(event==='SIGNED_OUT'||(!session&&CU)){
+        console.info('MATRIX: sessão expirada — logout automático');
+        doLogout();
+        toast('Sessão expirada. Faça login novamente.','warn');
+      }
+      if(event==='TOKEN_REFRESHED') console.info('MATRIX: JWT renovado');
+    });
+  },
+};
+
+async function doLogin(){
+  const u=gv('l-usr').trim(), s=gv('l-pwd');
+  const btn=document.querySelector('#loginScreen .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='Entrando...';}
+  try{
+    const result = await SessionManager.signIn(u, s);
+    if(!result||result.error){
+      document.getElementById('login-err').style.display='block';
+      document.getElementById('login-err').textContent=result?.error||'E-mail ou senha incorretos.';
+      return;
+    }
+    document.getElementById('login-err').style.display='none';
+    CU = result.user;
+    CU.ultimo=now(); save();
+    _applySession();
+    logF('sistema','Login realizado',`Usuário: ${CU.nome} (${CU.perfil})`);
+    initAll();
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='Entrar';}
+  }
+}
+function _applySession(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('mainApp').style.display='flex';
+  document.getElementById('userName').textContent=CU.nome;
+  document.getElementById('userRole').textContent=ROLES[CU.perfil]||CU.perfil;
+  document.getElementById('userAvatar').textContent=CU.nome[0].toUpperCase();
+  // Ocultar menus restritos por perfil
+  ['nav-usuarios','nav-config'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=(CU.perfil==='admin')?'':'none';
+  });
+  // Injetar botões de ação conforme permissão
+  setTimeout(applyPermUI,0);
+}
+async function doLogout(){
+  logF('sistema','Logout realizado',CU?.nome||'');
+  await SessionManager.signOut();
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('mainApp').style.display='none';
+  gv('l-usr',''); gv('l-pwd','');
+}
+
+// canDo: verificação silenciosa — usado em JS para show/hide de elementos
+// NÃO usar em HTML estático — usar applyPermUI() para injetar botões
+function canDo(recurso, acao){
+  if(!CU) return false;
+  const perms=PERM_MATRIX[CU.perfil];
+  if(!perms) return false;
+  return (perms[recurso]||[]).includes(acao);
+}
+
+// applyPermUI: injeta botões de ação nos placeholders do HTML estático
+// Chamada após login e após cada render de seção relevante
+function applyPermUI(){
+  // Botão "Novo produto"
+  const bProd=document.getElementById('prod-novo-btn');
+  if(bProd) bProd.innerHTML=canDo('produtos','create')
+    ?'<button class="btn btn-primary" onclick="openPM()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo produto</button>'
+    :'';
+
+  // Botão "Registrar" movimentação
+  const bMov=document.getElementById('mov-registrar-btn');
+  if(bMov) bMov.innerHTML=canDo('movimentacoes','create')
+    ?'<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="rMov()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>Registrar</button>'
+    :'';
+
+  // Botão "Novo fornecedor"
+  const bForn=document.getElementById('forn-novo-btn');
+  if(bForn) bForn.innerHTML=canDo('fornecedores','create')
+    ?'<button class="btn btn-primary" onclick="openFM()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo fornecedor</button>'
+    :'';
+}
+
+// checkPerm: wrapper de compatibilidade — delega a checkPermMatrix
+// Mantém todos os onclicks existentes funcionando sem alteração.
+function checkPerm(lvl){
+  if(!CU) return false;
+  if(lvl==='admin') return checkPermMatrix('usuarios','delete');
+  if(lvl==='edit')  return checkPermMatrix('produtos','update');
+  return true;
+}
+const ROLES={admin:'Administrador',operador:'Operador',consulta:'Consulta'};
+
+// ─── UTILS ──────────────────────────────────────────────────────────────────
+// ── uid(): gera UUID v4 compatível com PostgreSQL uuid PK ────────────────
+// Em PG: uuid_generate_v4() ou gen_random_uuid(). Mesmo formato aqui.
+// Permite que IDs gerados no frontend sejam usados diretamente no PG.
+function uid(){
+  if(typeof crypto!=='undefined'&&crypto.randomUUID) return crypto.randomUUID();
+  // Fallback para browsers sem crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0;
+    return(c==='x'?r:(r&0x3|0x8)).toString(16);
+  });
+}
+function now(){return new Date().toISOString()}
+function fdt(iso){if(!iso)return'—';try{const d=new Date(iso);return _dtFmt.format(d)+' '+_hrFmt.format(d);}catch{return'—';}}
+function fdts(iso){if(!iso)return'—';try{return _dtFmt.format(new Date(iso));}catch{return'—';}}
+function fR(v){return'R '+_curFmt.format(+v||0);}
+function gv(id,val){const e=document.getElementById(id);if(!e)return'';if(val!==undefined){e.value=val;return e}return e.value}
+function ge(id){return document.getElementById(id)}
+function toast(msg,t='ok'){const el=ge('toast');el.textContent=msg;el.style.color=t==='err'?'var(--red)':t==='warn'?'var(--amber)':'var(--green)';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800)}
+let _sections=null,_navItems=null;
+const NAV_LABELS={dashboard:'Dashboard',alertas:'Alertas',estoque:'Estoque',produtos:'Produtos',movs:'Movimentações',fluxo:'Controle de Fluxo',propostas:'Propostas',financeiro:'Financeiro',margem:'Margem & Preços',fornecedores:'Fornecedores',relatorios:'Relatórios',usuarios:'Usuários',config:'Configurações'};
+const NAV_SUBS={dashboard:'Visão estratégica executiva',alertas:'Alertas automáticos do sistema',estoque:'Posição atual do estoque',produtos:'Cadastro de produtos',movs:'Registro de movimentações',fluxo:'Auditoria e rastreabilidade',propostas:'Propostas comerciais',financeiro:'Análise financeira',margem:'Precificação e margem',fornecedores:'Cadastro de fornecedores',relatorios:'Exportar relatórios',usuarios:'Gestão de usuários',config:'Backup e configurações'};
+
+// ROUTE_RENDERERS: mapa global de seção → função de renderização.
+// Centraliza o que antes era uma const local 'fns' dentro de nav().
+// Usado por nav() e por _initRealtimeSync() para re-renderizar a seção
+// ativa quando dados chegam via Supabase Realtime (substitui NAV_FNS,
+// que nunca foi declarado nesta versão do arquivo).
+const ROUTE_RENDERERS={dashboard:rDash,alertas:rAlertas,estoque:rEst,produtos:rProd,movs:rMovL,fluxo:rFlux,propostas:rProps,financeiro:rFin,margem:rMarg,fornecedores:rForn,usuarios:rUsers,config:rCfg};
+
+function nav(id,btn){
+  if(!_sections)_sections=document.querySelectorAll('.section');
+  if(!_navItems)_navItems=document.querySelectorAll('.nav-item');
+  _sections.forEach(s=>s.classList.remove('active'));
+  _navItems.forEach(b=>b.classList.remove('active'));
+  const s=ge('sec-'+id); if(s) s.classList.add('active');
+  if(btn) btn.classList.add('active');
+  ge('tbT').textContent=NAV_LABELS[id]||id;
+  ge('tbS').textContent=NAV_SUBS[id]||'';
+  if(ROUTE_RENDERERS[id]) ROUTE_RENDERERS[id]();
+}
+
+// renderActiveSection: re-renderiza a seção atualmente visível.
+// Usado pelo realtime sync para refletir mudanças remotas sem navegar.
+function renderActiveSection(){
+  const active=document.querySelector('.section.active');
+  if(!active) return;
+  const id=active.id.replace('sec-','');
+  if(ROUTE_RENDERERS[id]) ROUTE_RENDERERS[id]();
+}
+function oM(id){ge(id).classList.add('open')}
+function cM(id){ge(id).classList.remove('open')}
+
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ─── ESTADO / DESTINO / APARENCIA ─────────────────────────────────────────
+const ESTADO_LBL={excelente:'Excelente',bom:'Bom',regular:'Regular',ruim:'Ruim',sucata:'Sucata'};
+const ESTADO_CLS={excelente:'estado-excelente',bom:'estado-bom',regular:'estado-regular',ruim:'estado-ruim',sucata:'estado-sucata'};
+const DEST_LBL={venda:'Venda',descarte:'Descarte',reaproveitamento:'Reaprov.',doacao:'Doação',reserva:'Reserva'};
+const DEST_CLS={venda:'destino-venda',descarte:'destino-descarte',reaproveitamento:'destino-reaproveitamento',doacao:'destino-doacao',reserva:'destino-reserva'};
+const AP_LBL={novo:'Novo',conservado:'Conservado',lev_amarelado:'Lev. Amarelado',muito_amarelado:'Mto. Amarelado',danificado:'Danificado'};
+const SC_LBL={disponivel:'Disponível',anunciado:'Anunciado',reservado:'Reservado',vendido:'Vendido',descartado:'Descartado'};
+const SC_CLS={disponivel:'bg',anunciado:'bb',reservado:'ba',vendido:'bp',descartado:'bm'};
+const ABC_CLS={A:'br',B:'ba',C:'bm'};
+
+function badgeEst(v){return`<span class="badge ${ESTADO_CLS[v]||'bm'}">${ESTADO_LBL[v]||v||'—'}</span>`}
+function badgeDest(v){return`<span class="badge ${DEST_CLS[v]||'bm'}">${DEST_LBL[v]||v||'—'}</span>`}
+function badgeSC(v){return`<span class="badge ${SC_CLS[v]||'bm'}">${SC_LBL[v]||v||'—'}</span>`}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDIT LOG — Preparado para tabela audit_log centralizada no PostgreSQL
+// Em PG: INSERT INTO audit_log (...) — append-only, sem UPDATE/DELETE.
+// RLS: todos os perfis podem INSERT; apenas admin pode SELECT.
+// Multiusuário: user_id (FK auth.users) e org_id isolam por organização.
+// ═══════════════════════════════════════════════════════════════════════════
+function logF(tipo, titulo, detalhe='', prod='', qtd=0){
+  // Estrutura alinhada com schema da tabela audit_log no PostgreSQL
+  const entry = {
+    id: uid(),           // uuid PK — gerado no cliente, confirmado pelo PG
+    tipo,                // text — tipo do evento
+    titulo,              // text — descrição resumida
+    detalhe,             // text — detalhe completo
+    prod,                // text — nome do produto (desnormalizado para audit trail)
+    qtd: +qtd||0,        // int  — quantidade envolvida
+    user: CU?.nome||'Sistema',  // text — nome desnormalizado (para leitura sem JOIN)
+    user_id: CU?.id||null,      // uuid FK — para JOIN futuro com auth.users
+    org_id: DB.cfg?.org_id||null, // uuid — multitenancy: isola por organização
+    ts: now(),           // timestamptz — horário do evento
+  };
+  DB.fluxo.unshift(entry);
+  if(DB.fluxo.length>2000) DB.fluxo=DB.fluxo.slice(0,2000);
+  save();
+  // Supabase: insere no audit_log centralizado (fire-and-forget)
+  DataAdapter.insertLog(entry).catch(e=>console.warn('audit_log sync:',e));
+  updBadges();
+}
+
+// ─── ALERTAS ───────────────────────────────────────────────────────────────
+let _alertCache=null,_alertDirty=true;
+function invalidateAlerts(){_alertDirty=true;_alertCache=null;}
+function getAlertas(){
+  if(!_alertDirty&&_alertCache) return _alertCache;
+  _alertDirty=false; _alertCache=_computeAlertas(); return _alertCache;
+}
+function _computeAlertas(){
+  const al=[];
+  const now90=Date.now()-90*864e5, now180=Date.now()-180*864e5;
+  DB.produtos.forEach(p=>{
+    const q=p.qtd||0, mn=p.qmin||0;
+    const nm=esc(p.nome);
+    if(q<=mn) al.push({t:'err',ico:'⚠',msg:`<strong>${nm}</strong> — estoque crítico (${q} unid., mín. ${mn})`,cat:'estoque'});
+    if(!p.fornecedor) al.push({t:'warn',ico:'🏭',msg:`<strong>${nm}</strong> — sem fornecedor vinculado`,cat:'fornecedor'});
+    if(p.estado==='sucata') al.push({t:'err',ico:'🗑',msg:`<strong>${nm}</strong> — classificado como sucata`,cat:'estado'});
+    if(!p.destino) al.push({t:'warn',ico:'❓',msg:`<strong>${nm}</strong> — destino final não definido`,cat:'destino'});
+    const movsProd=DB.movimentacoes.filter(m=>m.prodId===p.id);
+    if(movsProd.length>0){
+      // slice() evita mutar DB.movimentacoes in-place
+      const last=new Date(movsProd.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts))[0].ts).getTime();
+      if(last<now180) al.push({t:'warn',ico:'📦',msg:`<strong>${nm}</strong> — sem movimentação há mais de 180 dias`,cat:'parado'});
+      else if(last<now90) al.push({t:'info',ico:'⏰',msg:`<strong>${nm}</strong> — sem movimentação há mais de 90 dias`,cat:'parado'});
+    }
+  });
+  return al;
+}
+function updBadges(){
+  invalidateAlerts();
+  const al=getAlertas();
+  const ac=ge('alert-count');
+  if(ac){if(al.length>0){ac.style.display='block';ac.textContent=al.length}else ac.style.display='none'}
+  const ba=ge('badge-al');
+  const crit=al.filter(a=>a.cat==='estoque').length;
+  if(ba){if(crit>0){ba.style.display='';ba.textContent=crit}else ba.style.display='none';}
+  const pfx=ge('badge-fx'); if(pfx) pfx.textContent=DB.fluxo.length;
+  const pbr=ge('badge-pr');
+  const pc=DB.propostas.filter(p=>p.status==='analise').length;
+  if(pbr){if(pc>0){pbr.style.display='';pbr.textContent=pc}else pbr.style.display='none';}
+}
+
+// ─── DASHBOARD ─────────────────────────────────────────────────────────────
+let charts={};
+function rDash(){
+  const prods=DB.produtos, movs=DB.movimentacoes;
+  const totQ=prods.reduce((a,p)=>a+(p.qtd||0),0);
+  const totV=prods.reduce((a,p)=>a+(p.qtd||0)*(p.preco||0),0);
+  const pVenda=prods.filter(p=>p.destino==='venda').length;
+  const pDesc=prods.filter(p=>p.destino==='descarte').length;
+  const pReap=prods.filter(p=>p.destino==='reaproveitamento').length;
+  const nowD=new Date(); const mo=nowD.getMonth(), yr=nowD.getFullYear();
+  const venMes=movs.filter(mv=>{const d=new Date(mv.ts);return mv.tipo==='saida'&&d.getMonth()===mo&&d.getFullYear()===yr}).reduce((a,mv)=>a+(mv.qtd||0),0);
+  const crit=prods.filter(p=>(p.qtd||0)<=(p.qmin||0)).length;
+  const topV=prods.slice().sort((a,b)=>(b.qtd||0)*(b.preco||0)-(a.qtd||0)*(a.preco||0))[0];
+  const kpis=[
+    {l:'Produtos Cadastrados',v:prods.length,s:'itens únicos no catálogo',ic:'<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg>',ic2:'ibl',cc:'kbl'},
+    {l:'Itens em Estoque',v:totQ,s:'unidades totais',ic:'<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8"/></svg>',ic2:'ipu',cc:'kpu'},
+    {l:'Valor Potencial',v:fR(totV),s:'valor total do estoque',ic:'<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',ic2:'igr',cc:'kgr'},
+    {l:'Para Venda',v:pVenda,s:'produtos destinados à venda',ic:'<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',ic2:'iam',cc:'kam'},
+    {l:'Para Descarte',v:pDesc,s:'produtos destinados ao descarte',ic:'<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>',ic2:'ird',cc:'krd'},
+    {l:'Vendidos no Mês',v:venMes,s:'saídas por venda no mês',ic:'<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',ic2:'icy',cc:'kcy'},
+  ];
+  ge('dash-kpis6').innerHTML=kpis.map(k=>`<div class="kpi-card ${k.cc}"><div class="kpi-icon ${k.ic2}">${k.ic}</div><div class="kpi-label">${esc(k.l)}</div><div class="kpi-value" style="font-size:${typeof k.v==='string'&&k.v.length>9?'14':'20'}px">${esc(String(k.v))}</div><div class="kpi-sub">${esc(k.s)}</div></div>`).join('');
+  // alerts box — getAlertas() chamada 1x, resultado reutilizado
+  const allAls=getAlertas();
+  const als=allAls.slice(0,3);
+  ge('dash-alerts-box').innerHTML=als.length?`<div class="alerts-panel"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:8px">⚡ Alertas Ativos</div>${als.map(a=>`<div class="alert-item"><span style="font-size:14px">${a.ico}</span><span style="font-size:12px">${a.msg}</span></div>`).join('')}${allAls.length>3?`<div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center;cursor:pointer" onclick="nav('alertas',null)">Ver todos os ${allAls.length} alertas →</div>`:''}</div>`:'';
+  // insights — esc() em dados vindos do DB
+  const ins=[
+    {icon:'🏆',label:'Maior Valor',val:topV?`${esc(topV.nome.slice(0,22))} — ${fR((topV.qtd||0)*(topV.preco||0))}`:'-'},
+    {icon:'⚠',label:'Estoque Crítico',val:`${crit} produto${crit!==1?'s':''} abaixo do mínimo`},
+    {icon:'📦',label:'Reaproveitamento',val:`${pReap} produto${pReap!==1?'s':''} para reaproveitamento`},
+    {icon:'📊',label:'Total Movimentações',val:`${movs.length} registros históricos`},
+  ];
+  ge('dash-ins').innerHTML=ins.map(i=>`<div class="ins-card"><div class="ins-icon" style="background:rgba(255,255,255,.06)">${i.icon}</div><div class="ins-text"><strong>${i.label}</strong><br>${i.val}</div></div>`).join('');
+  // tabela movs recentes — esc() em campos de dados
+  const rm=movs.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts)).slice(0,8);
+  const tcls2={entrada:'bg',saida:'br',ajuste:'ba',transferencia:'bb'};
+  ge('dash-mtb').innerHTML=rm.length?rm.map(m=>{
+    const p=IDX.prod.get(m.prodId); // OPT: O(1) Map lookup
+    const tc=tcls2[m.tipo]||'bm';
+    return`<tr><td><span class="badge ${tc}">${esc(m.tipo)}</span></td><td class="td-bold">${esc(p?p.nome:m.prodNome||'—')}</td><td class="td-mono">${+m.qtd||0}</td><td class="td-muted">${esc(m.user||'—')}</td><td class="td-mono td-muted">${fdt(m.ts)}</td></tr>`;
+  }).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text-hint);padding:20px">Sem movimentações ainda.</td></tr>';
+  rCharts();
+}
+
+function rCharts(){
+  const movs=DB.movimentacoes, prods=DB.produtos;
+  // Movs 6 meses
+  const months=[]; const now=new Date();
+  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({y:d.getFullYear(),m:d.getMonth(),lbl:d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'})})}
+  const entradas=months.map(mo=>movs.filter(mv=>{const d=new Date(mv.ts);return mv.tipo==='entrada'&&d.getMonth()===mo.m&&d.getFullYear()===mo.y}).reduce((a,m)=>a+(m.qtd||0),0));
+  const saidas=months.map(mo=>movs.filter(mv=>{const d=new Date(mv.ts);return mv.tipo==='saida'&&d.getMonth()===mo.m&&d.getFullYear()===mo.y}).reduce((a,m)=>a+(m.qtd||0),0));
+  mkChart('cMovs','bar',{labels:months.map(m=>m.lbl),datasets:[{label:'Entradas',data:entradas,backgroundColor:'rgba(52,211,153,.7)',borderRadius:4},{label:'Saídas',data:saidas,backgroundColor:'rgba(248,113,113,.7)',borderRadius:4}]});
+  // Top produtos
+  const top5=prods.slice().sort((a,b)=>(b.qtd||0)-(a.qtd||0)).slice(0,5);
+  mkChart('cTop','doughnut',{labels:top5.map(p=>p.nome.slice(0,16)),datasets:[{data:top5.map(p=>p.qtd||0),backgroundColor:['rgba(56,189,248,.8)','rgba(129,140,248,.8)','rgba(192,132,252,.8)','rgba(52,211,153,.8)','rgba(251,217,76,.8)'],borderWidth:0}]});
+  // Destino
+  const dkeys=['venda','descarte','reaproveitamento','doacao','reserva'];
+  const dcnts=dkeys.map(d=>prods.filter(p=>p.destino===d).length);
+  const dlbls=['Venda','Descarte','Reaprov.','Doação','Reserva'];
+  mkChart('cDestino','doughnut',{labels:dlbls,datasets:[{data:dcnts,backgroundColor:['rgba(52,211,153,.8)','rgba(248,113,113,.8)','rgba(56,189,248,.8)','rgba(192,132,252,.8)','rgba(251,217,76,.8)'],borderWidth:0}]});
+  // Estado
+  const ekeys=['excelente','bom','regular','ruim','sucata'];
+  const elbls=['Excelente','Bom','Regular','Ruim','Sucata'];
+  const ecnts=ekeys.map(e=>prods.filter(p=>p.estado===e).length);
+  mkChart('cEstado','bar',{labels:elbls,datasets:[{label:'Produtos',data:ecnts,backgroundColor:['rgba(52,211,153,.7)','rgba(56,189,248,.7)','rgba(251,217,76,.7)','rgba(251,146,60,.7)','rgba(248,113,113,.7)'],borderRadius:4}]});
+}
+const CHART_DEFAULTS={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7B90AA',font:{size:11}}}}};
+function mkChart(id,type,data,extraOpts={}){
+  try{
+    if(charts[id]){charts[id].destroy();delete charts[id];}
+    const ctx=ge(id); if(!ctx) return;
+    const defScales=type==='bar'?{x:{ticks:{color:'#7B90AA',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#7B90AA',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}:{};
+    const opts={...CHART_DEFAULTS,scales:defScales,...extraOpts};
+    if(extraOpts.plugins) opts.plugins={...CHART_DEFAULTS.plugins,...extraOpts.plugins};
+    charts[id]=new Chart(ctx,{type,data,options:opts});
+  }catch(e){console.warn('MATRIX: falha ao renderizar gráfico',id,e);}
+}
+
+// ─── ALERTAS PAGE ───────────────────────────────────────────────────────────
+function rAlertas(){
+  const als=getAlertas();
+  const box=ge('alertas-list');
+  if(!als.length){box.innerHTML='<div class="card"><div class="empty-state"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><p>Nenhum alerta ativo. Tudo em ordem!</p></div></div>';return}
+  const tcls={err:'alert-danger',warn:'alert-warn',info:'alert-info'};
+  const ticos={err:'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',warn:'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'};
+  box.innerHTML=als.map(a=>`<div class="alert ${tcls[a.t]||'alert-info'}">${ticos[a.t]}<div>${a.msg}</div></div>`).join('');
+}
+
+// ─── ESTOQUE ────────────────────────────────────────────────────────────────
+function indDot(p){const q=p.qtd||0,mn=p.qmin||0,mx=p.qmax||100;if(q<=mn)return'<span class="ind-dot dc" title="Crítico"></span>';if(q<(mx*.3))return'<span class="ind-dot dw" title="Atenção"></span>';return'<span class="ind-dot dn" title="Normal"></span>'}
+function qBar(p){const q=p.qtd||0,mx=p.qmax||100;const pct=Math.min(100,Math.round(q/mx*100));const cls=pct<=20?'ql':pct<=50?'qm':'qh';return`<div class="qty-bar"><div class="qty-fill ${cls}" style="width:${pct}%"></div></div>`}
+function rEst(){
+  const q=gv('est-q').toLowerCase(), mk=gv('est-mk'), inv=gv('est-in'), dest=gv('est-dest'), est=gv('est-est');
+  let ps=DB.produtos.filter(p=>{
+    const nm=p._lnome||(p._lnome=p.nome.toLowerCase()); // OPT: cache lowercase
+    const sq=!q||nm.includes(q)||(p.marca||'').toLowerCase().includes(q);
+    const smk=!mk||p.marca===mk;
+    const sd=!dest||p.destino===dest;
+    const se=!est||p.estado===est;
+    const si=!inv||(inv==='crit'&&(p.qtd||0)<=(p.qmin||0))||(inv==='warn'&&(p.qtd||0)>(p.qmin||0)&&(p.qtd||0)<(p.qmax||100)*.3)||(inv==='ok'&&(p.qtd||0)>=(p.qmax||100)*.3);
+    return sq&&smk&&sd&&se&&si;
+  });
+  ge('est-empty').style.display=ps.length?'none':'block';
+  // OPT: cap 200 — suporta milhares de registros sem travar o DOM
+  ge('est-tb').innerHTML=ps.slice(0,200).map(p=>`<tr>
+    <td>${indDot(p)}</td>
+    <td>${(p.foto||p.foto_url)?`<img src="${p.foto||p.foto_url}" class="thumb" alt="">` :'<span class="no-img">sem foto</span>'}</td>
+    <td class="td-bold">${esc(p.nome)}<div style="font-size:10px;color:var(--text-muted)">${esc(p.categoria||'')}</div></td>
+    <td class="td-muted">${esc(p.marca||'—')}</td>
+    <td class="td-mono td-bold" style="color:${(p.qtd||0)<=(p.qmin||0)?'var(--red)':(p.qtd||0)<(p.qmax||100)*.3?'var(--amber)':'var(--green)'}">${p.qtd||0}</td>
+    <td class="td-mono td-muted">${p.qmin||0}</td>
+    <td style="min-width:80px">${qBar(p)}<span style="font-size:9px;color:var(--text-hint)">${Math.min(100,Math.round((p.qtd||0)/(p.qmax||100)*100))}%</span></td>
+    <td>${badgeSC(p.statuscom)}</td>
+    <td>${badgeEst(p.estado)}</td>
+    <td>${badgeDest(p.destino)}</td>
+    <td class="td-mono">${fR(p.preco||0)}</td>
+    <td class="td-mono td-bold" style="color:var(--green)">${fR((p.qtd||0)*(p.preco||0))}</td>
+    <td class="act">${canDo('produtos','update')?`<button class="lbtn" onclick="openPM('${esc(p.id)}')">✏</button>`:''}</td>
+  </tr>`).join('');
+  const marks=[...new Set(DB.produtos.map(p=>p.marca).filter(Boolean))].sort();
+  const me=ge('est-mk'); const mv=me.value;
+  me.innerHTML='<option value="">Todas marcas</option>'+marks.map(m=>`<option value="${esc(m)}"${m===mv?' selected':''}>${esc(m)}</option>`).join('');
+}
+
+// ─── PRODUTOS ───────────────────────────────────────────────────────────────
+function rProd(){
+  const q=gv('prod-q').toLowerCase(), mk=gv('prod-mk'), dest=gv('prod-dest');
+  let ps=DB.produtos.filter(p=>{
+    const nm=p._lnome||(p._lnome=p.nome.toLowerCase()); // OPT: cache lowercase
+    const sq=!q||nm.includes(q)||(p.marca||'').toLowerCase().includes(q)||(p.categoria||'').toLowerCase().includes(q);
+    const smk=!mk||p.marca===mk;
+    const sd=!dest||p.destino===dest;
+    return sq&&smk&&sd;
+  });
+  ge('prod-empty').style.display=ps.length?'none':'block';
+  applyPermUI(); // atualiza botões de permissão
+  ge('prod-tb').innerHTML=ps.slice(0,200).map(p=>{ // OPT: cap 200
+    const mn=(p.preco||0)>0&&(p.pmin||0)>0?Math.round(((p.preco||0)-(p.pmin||0))/(p.pmin||1)*100):0;
+    return`<tr>
+      <td>${indDot(p)}</td>
+      <td>${(p.foto||p.foto_url)?`<img src="${p.foto||p.foto_url}" class="thumb" alt="">` :'<span class="no-img">—</span>'}</td>
+      <td class="td-bold">${esc(p.nome)}<div style="font-size:10px;color:var(--text-muted)">${esc(p.marca||'')} ${esc(p.modelo||'')}</div></td>
+      <td class="td-muted">${esc(p.marca||'—')}</td>
+      <td class="td-mono td-bold" style="color:${(p.qtd||0)<=(p.qmin||0)?'var(--red)':'var(--text)'}">${p.qtd||0}</td>
+      <td class="td-mono td-muted">${p.qmin||0}</td>
+      <td>${badgeSC(p.statuscom)}</td>
+      <td>${badgeEst(p.estado)}</td>
+      <td><span class="badge bm" style="font-size:8px">${esc(AP_LBL[p.aparencia]||'—')}</span></td>
+      <td>${badgeDest(p.destino)}</td>
+      <td class="td-mono">${fR(p.preco||0)}</td>
+      <td class="td-mono" style="color:${mn>0?'var(--green)':mn<0?'var(--red)':'var(--text-muted)'}">${mn>0?'+':''}${mn}%</td>
+      <td><span class="badge ${ABC_CLS[p.abc]||'bm'}">${esc(p.abc||'—')}</span></td>
+      <td class="act">
+        ${canDo('produtos','update')?`<button class="lbtn" onclick="openPM('${esc(p.id)}')">✏</button>`:''}
+        ${canDo('produtos','delete')?`<button class="lbtn d" onclick="delProd('${esc(p.id)}')">✕</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+  const marks=[...new Set(DB.produtos.map(p=>p.marca).filter(Boolean))].sort();
+  const me=ge('prod-mk'); const mv=me.value;
+  me.innerHTML='<option value="">Todas marcas</option>'+marks.map(m=>`<option value="${esc(m)}"${m===mv?' selected':''}>${esc(m)}</option>`).join('');
+  ge('mk-list').innerHTML=marks.map(m=>`<option value="${esc(m)}">`).join('');
+  const cats=[...new Set(DB.produtos.map(p=>p.categoria).filter(Boolean))].sort();
+  ge('ct-list').innerHTML=cats.map(c=>`<option value="${esc(c)}">`).join('');
+}
+
+function openPM(id){
+  const e=id?DB.produtos.find(p=>p.id===id):null;
+  ge('mp-id').value=e?e.id:'';
+  ge('m-prod-t').textContent=e?'Editar Produto':'Novo Produto';
+  ge('mp-bl').textContent=e?'Salvar alterações':'Salvar produto';
+  if(e){
+    gv('mp-nm',e.nome||''); gv('mp-mk',e.marca||''); gv('mp-mo',e.modelo||'');
+    gv('mp-ct',e.categoria||''); gv('mp-sc',e.subcategoria||'');
+    gv('mp-ns',e.nSerie||''); gv('mp-pt',e.patrimonio||'');
+    gv('mp-es',e.estado||''); gv('mp-ap',e.aparencia||'');
+    gv('mp-dt',e.destino||''); gv('mp-sc2',e.statuscom||'disponivel');
+    gv('mp-ab',e.abc||'C'); gv('mp-tg',e.tags||'');
+    gv('mp-qi',e.qtd||0); gv('mp-qm',e.qmin||1); gv('mp-qx',e.qmax||100);
+    gv('mp-pm',e.pmin||0); gv('mp-pi',e.preco||0); gv('mp-px',e.pmax||0);
+    gv('mp-ob',e.obs||''); gv('mp-lc',e.local||'');
+    // foto
+    if(e.foto){ge('mp-foto-prev').src=e.foto;ge('mp-foto-prev').style.display='block';ge('mp-foto-ph').style.display='none'}
+    else{ge('mp-foto-prev').style.display='none';ge('mp-foto-ph').style.display='block'}
+  } else {
+    ['mp-nm','mp-mk','mp-mo','mp-ct','mp-sc','mp-ns','mp-pt','mp-es','mp-ap','mp-dt','mp-tg','mp-ob','mp-lc'].forEach(f=>gv(f,''));
+    gv('mp-sc2','disponivel'); gv('mp-ab','C');
+    gv('mp-qi',0); gv('mp-qm',1); gv('mp-qx',100);
+    gv('mp-pm',0); gv('mp-pi',0); gv('mp-px',0);
+    ge('mp-foto-prev').style.display='none'; ge('mp-foto-ph').style.display='block';
+    ge('mp-foto-in').value='';
+  }
+  // fornecedores
+  const fsel=ge('mp-fn');
+  fsel.innerHTML='<option value="">— Nenhum —</option>'+DB.fornecedores.map(f=>`<option value="${f.id}"${e&&e.fornecedor===f.id?' selected':''}>${f.nome}</option>`).join('');
+  oM('m-prod');
+}
+
+function onFoto(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{const d=ev.target.result;ge('mp-foto-prev').src=d;ge('mp-foto-prev').style.display='block';ge('mp-foto-ph').style.display='none'};
+  r.readAsDataURL(f);
+}
+
+async function sProd(){
+  const id=gv('mp-id');
+  const nm=gv('mp-nm').trim(); if(!nm){toast('Nome obrigatório','err');return}
+  const dest=gv('mp-dt');
+  const est=gv('mp-es'); if(!est){toast('Estado do equipamento obrigatório','err');return}
+  // FIX CRÍTICO #1: o id usado no upload deve ser o MESMO id final do produto.
+  // Para edição, usa o id existente. Para novo produto, gera o id AGORA
+  // e reutiliza esse mesmo valor na criação do registro (novo.id abaixo),
+  // garantindo que o path no Storage corresponda ao produto real.
+  const finalProdId = id || uid();
+  // Supabase Storage: upload da foto se driver ativo
+  let foto=ge('mp-foto-prev').style.display!=='none'?ge('mp-foto-prev').src:'';
+  let foto_url=null;
+  const fotoFile=ge('mp-foto-in').files?.[0];
+  if(fotoFile&&DataAdapter.isSupabase()){
+    const uploadedUrl=await DataAdapter.uploadImage(fotoFile,finalProdId);
+    if(uploadedUrl){ foto_url=uploadedUrl; foto=''; toast('Imagem enviada ao Supabase Storage.','ok'); }
+  }
+  const d={nome:nm,foto_url,marca:gv('mp-mk'),modelo:gv('mp-mo'),categoria:gv('mp-ct'),subcategoria:gv('mp-sc'),nSerie:gv('mp-ns'),patrimonio:gv('mp-pt'),estado:est,aparencia:gv('mp-ap'),destino:dest,statuscom:gv('mp-sc2'),abc:gv('mp-ab'),tags:gv('mp-tg'),qmin:+gv('mp-qm'),qmax:+gv('mp-qx'),pmin:+gv('mp-pm'),preco:+gv('mp-pi'),pmax:+gv('mp-px'),obs:gv('mp-ob'),local:gv('mp-lc'),fornecedor:gv('mp-fn'),foto};
+  if(id){
+    const idx=DB.produtos.findIndex(p=>p.id===id);
+    if(idx>=0){const old=DB.produtos[idx];DB.produtos[idx]={...old,...d,upd:now()};logF('sistema','Produto editado',`${nm}`,nm)}
+  } else {
+    // FIX CRÍTICO #1: reutiliza finalProdId (mesmo id usado no upload da imagem)
+    const novo={id:finalProdId,qtd:+gv('mp-qi'),criado:now(),org_id:DB.cfg?.org_id||null,...d};
+    DB.produtos.push(novo);
+    if(novo.qtd>0){DB.movimentacoes.push({id:uid(),tipo:'entrada',prodId:novo.id,prodNome:nm,qtd:novo.qtd,ts:now(),user:CU?.nome||'Sistema',obs:'Estoque inicial',classificacao:'compra',lote:'',destino:'',hash:uid()});logF('entrada','Estoque inicial cadastrado',`${nm} — ${novo.qtd} unid.`,nm,novo.qtd)}
+    logF('sistema','Produto cadastrado',`${nm}`,nm);
+  }
+  DB.produtos.forEach(p=>{p._lnome=p.nome.toLowerCase();}); rebuildIdx(); invalidateAlerts(); save();
+  // Supabase: upsert granular do produto
+  const savedProd=id?DB.produtos.find(x=>x.id===id):DB.produtos[DB.produtos.length-1];
+  if(savedProd) DataAdapter.upsertOne('produtos',savedProd).catch(e=>console.warn('produto upsert:',e));
+  cM('m-prod'); rProd(); rEst(); updBadges(); toast(id?'Produto atualizado!':'Produto cadastrado!');
+}
+
+function delProd(id){
+  if(!checkPerm('admin')) return;
+  const p=DB.produtos.find(x=>x.id===id); if(!p) return;
+  if(!confirm(`Excluir "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
+  logF('exclusao',`Produto excluído`,`${p.nome} — qtd: ${p.qtd||0}`,p.nome);
+  DB.produtos=DB.produtos.filter(x=>x.id!==id);
+  rebuildIdx(); invalidateAlerts(); save();
+  DataAdapter.deleteOne('produtos',id).catch(e=>console.warn('prod delete:',e));
+  rProd(); rEst(); updBadges(); toast('Produto excluído.');
+}
+
+// ─── MOVIMENTAÇÕES ─────────────────────────────────────────────────────────
+let movTipo='entrada';
+function sMT(t){
+  movTipo=t;
+  ['ent','sai','adj','trf'].forEach(x=>ge('tt-'+x).classList.remove('active'));
+  const map={entrada:'ent',saida:'sai',ajuste:'adj',transferencia:'trf'};
+  ge('tt-'+map[t]).classList.add('active');
+  ge('mov-ag').style.display=t==='ajuste'?'block':'none';
+  ge('mov-dg').style.display=t!=='ajuste'?'block':'none';
+  ge('mov-dl').textContent=t==='entrada'?'Origem':t==='saida'?'Destino':t==='transferencia'?'Para local':'Origem';
+}
+function initMovForm(){
+  applyPermUI(); // injetar botão Registrar conforme perfil
+  const nowM=new Date();
+  gv('mov-dt',nowM.toISOString().split('T')[0]);
+  gv('mov-hr',nowM.toTimeString().slice(0,5));
+  const ps=ge('mov-prod');
+  ps.innerHTML='<option value="">— Selecione —</option>'+DB.produtos.map(p=>`<option value="${esc(p.id)}">${esc(p.nome)} (${p.qtd||0})</option>`).join('');
+}
+function rMov(){
+  if(!checkPerm('edit')) return;
+  const pid=gv('mov-prod'); if(!pid){toast('Selecione um produto','err');return}
+  const p=DB.produtos.find(x=>x.id===pid); if(!p){toast('Produto não encontrado','err');return}
+  let q=+gv('mov-qtd');
+  if(!q||q<=0){toast('Quantidade inválida','err');return}
+  if(movTipo==='saida'&&q>(p.qtd||0)){toast(`Estoque insuficiente (${p.qtd||0} disponível)`,'err');return}
+  // FIX: ts calculado com try/catch — new Date(inválido).toISOString() lança exceção, nunca é falsy
+  let ts;
+  try{ ts=new Date(gv('mov-dt')+'T'+gv('mov-hr')+':00').toISOString(); }
+  catch(e){ ts=new Date().toISOString(); }
+  if(!ts||ts==='Invalid Date') ts=new Date().toISOString();
+  // FIX CRÍTICO #2: hash agora deriva de um UUID v4 dedicado (uid()),
+  // eliminando colisões quando duas movimentações idênticas (mesmo produto,
+  // tipo, quantidade, usuário) ocorrem no mesmo segundo. O hash anterior
+  // (`${pid}-${movTipo}-${q}-${ts}-${CU?.id}`) tinha granularidade de
+  // segundo em `ts`, causando violação da constraint UNIQUE e perda
+  // silenciosa de movimentações no upsert ao Supabase.
+  // Em PG: UNIQUE constraint na coluna hash da tabela movimentacoes
+  const _movHash = uid();
+  const m={id:uid(),tipo:movTipo,prodId:pid,prodNome:p.nome,qtd:q,dt:gv('mov-dt'),hr:gv('mov-hr'),ts,lote:gv('mov-lot'),classificacao:gv('mov-cls'),destino:gv('mov-dst'),obs:gv('mov-obs'),user:gv('mov-rsp')||CU?.nome||'Sistema',user_id:CU?.id||null,org_id:DB.cfg?.org_id||null,hash:_movHash};
+  if(movTipo==='ajuste'){const fv=+gv('mov-afv');const diff=fv-(p.qtd||0);q=Math.abs(diff);m.qtd=q;m.obs=`Ajuste: ${p.qtd||0} → ${fv}. `+m.obs;if(diff>0)m.tipo='entrada';else if(diff<0)m.tipo='saida';else{toast('Nenhuma diferença para ajustar','warn');return}}
+  if(m.tipo==='entrada') p.qtd=(p.qtd||0)+q;
+  else if(m.tipo==='saida'||m.tipo==='transferencia') p.qtd=Math.max(0,(p.qtd||0)-q);
+  p.upd=new Date().toISOString();
+  DB.movimentacoes.push(m);
+  rebuildIdx(); invalidateAlerts();
+  logF(m.tipo,`Movimentação: ${m.tipo}`,`${p.nome} — ${q} unid. | ${m.classificacao||''}`,p.nome,q);
+  save();
+  // Supabase: upsert movimentação + produto atualizado
+  DataAdapter.upsertOne('movimentacoes',m).catch(e=>console.warn('mov upsert:',e));
+  DataAdapter.upsertOne('produtos',p).catch(e=>console.warn('prod upsert:',e));
+  rMovL(); rEst(); updBadges();
+  gv('mov-qtd',1); gv('mov-obs',''); gv('mov-lot','');
+  toast('Movimentação registrada!');
+}
+function rMovL(){
+  if(!CU) return;
+  const q=gv('movl-q').toLowerCase(), ft=gv('movl-f');
+  // OPT: filtrar antes de ordenar — sort só sobre subconjunto filtrado
+  let ms=DB.movimentacoes;
+  if(q) ms=ms.filter(m=>(m.prodNome||'').toLowerCase().includes(q)||(m.user||'').toLowerCase().includes(q));
+  if(ft) ms=ms.filter(m=>m.tipo===ft);
+  ms=ms.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  ge('ms-tot').textContent=ms.length;
+  ge('ms-ent').textContent=ms.filter(m=>m.tipo==='entrada').reduce((a,m)=>a+(m.qtd||0),0);
+  ge('ms-sai').textContent=ms.filter(m=>m.tipo==='saida').reduce((a,m)=>a+(m.qtd||0),0);
+  ge('movl-empty').style.display=ms.length?'none':'block';
+  const tcls={entrada:'bg',saida:'br',ajuste:'ba',transferencia:'bb'};
+  const isAdmin=canDo('movimentacoes','delete');
+  ge('movl-tb').innerHTML=ms.slice(0,150).map(m=>`<tr>
+    <td><span class="badge ${tcls[m.tipo]||'bm'}">${esc(m.tipo)}</span></td>
+    <td class="td-bold">${esc(m.prodNome||'—')}</td>
+    <td class="td-mono td-bold">${+m.qtd||0}</td>
+    <td class="td-mono td-muted">${fdt(m.ts)}</td>
+    <td class="td-muted">${esc(m.user||'—')}</td>
+    <td class="td-muted">${esc(m.destino||'—')}</td>
+    <td><span class="badge bm" style="font-size:8px">${esc(m.classificacao||'—')}</span></td>
+    <td>${m.lote?`<span class="lote-tag">${esc(m.lote)}</span>`:'—'}</td>
+    <td class="td-muted" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(m.obs||'')}">${esc(m.obs||'—')}</td>
+    <td>${isAdmin?`<button class="lbtn d" onclick="delMov('${esc(m.id)}')">✕</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+function delMov(id){
+  if(!checkPerm('admin')) return;
+  const m=DB.movimentacoes.find(x=>x.id===id); if(!m) return;
+  if(!confirm('Excluir esta movimentação?')) return;
+  const p=DB.produtos.find(x=>x.id===m.prodId);
+  if(p){if(m.tipo==='entrada')p.qtd=Math.max(0,(p.qtd||0)-m.qtd);else if(m.tipo==='saida')p.qtd=(p.qtd||0)+m.qtd;}
+  logF('exclusao','Movimentação excluída',`${m.prodNome} — ${m.qtd} unid.`);
+  DB.movimentacoes=DB.movimentacoes.filter(x=>x.id!==id);
+  rebuildIdx(); invalidateAlerts(); save();
+  DataAdapter.deleteOne('movimentacoes',id).catch(e=>console.warn('mov delete:',e));
+  rMovL(); rEst(); updBadges(); toast('Movimentação excluída.');
+}
+
+// ─── FLUXO ──────────────────────────────────────────────────────────────────
+function rFlux(){
+  const q=gv('fx-q').toLowerCase(), ft=gv('fx-f');
+  // OPT: fluxo já está em ordem decrescente (unshift) — sem sort necessário
+  // OPT: fluxo já em ordem decrescente via unshift — sem sort necessário
+  let fl=DB.fluxo.filter(f=>{
+    const sq=!q||f.titulo?.toLowerCase().includes(q)||f.prod?.toLowerCase().includes(q)||f.user?.toLowerCase().includes(q);
+    const sf=!ft||f.tipo===ft;
+    return sq&&sf;
+  });
+  ge('fx-tot').textContent=DB.fluxo.length;
+  ge('fx-ent').textContent=DB.fluxo.filter(f=>f.tipo==='entrada').length;
+  ge('fx-sai').textContent=DB.fluxo.filter(f=>f.tipo==='saida').length;
+  ge('fx-out').textContent=DB.fluxo.filter(f=>!['entrada','saida'].includes(f.tipo)).length;
+  ge('fx-empty').style.display=fl.length?'none':'block';
+  const dcls={entrada:'dl-entrada',saida:'dl-saida',ajuste:'dl-ajuste',exclusao:'dl-exclusao',sistema:'dl-sistema',transferencia:'dl-transferencia'};
+  const dico={entrada:'<svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>',saida:'<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>',ajuste:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>',exclusao:'<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>',sistema:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>',transferencia:'<svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>'};
+  ge('fx-tl').innerHTML=fl.slice(0,200).map(f=>`<div class="tl-item">
+    <div class="tl-dot ${dcls[f.tipo]||'dl-sistema'}">${dico[f.tipo]||dico.sistema}</div>
+    <div class="tl-body">
+      <div class="tl-title">${esc(f.titulo||'')}</div>
+      <div class="tl-meta"><span>${fdt(f.ts)}</span><span>👤 ${esc(f.user||'Sistema')}</span>${f.qtd?`<span>📦 ${+f.qtd||0} unid.</span>`:''}</div>
+      ${f.detalhe?`<div class="tl-detail">${esc(f.detalhe)}</div>`:''}
+    </div>
+  </div>`).join('');
+}
+
+// ─── PROPOSTAS ─────────────────────────────────────────────────────────────
+function cPL(){const vr=+gv('pr-vr')||0,vs=+gv('pr-vs')||0,qt=+gv('pr-qt')||1;const lc=(vr-vs)*qt;ge('pr-lc').textContent=fR(lc);ge('pr-lc').style.color=lc>=0?'var(--green)':'var(--red)';}
+
+// Popula o select de produtos na tela de Propostas
+function initPropProdSelect(){
+  const sel=ge('pr-prod-sel'); if(!sel) return;
+  sel.innerHTML='<option value="">— Selecione um produto —</option>'+
+    DB.produtos.map(p=>`<option value="${esc(p.id)}" data-preco="${p.preco||0}">${esc(p.nome)}${p.marca?' ('+esc(p.marca)+')':''} — Estoque: ${p.qtd||0}</option>`).join('');
+}
+
+// Ao selecionar produto, preenche campos automaticamente
+function onPropProdSelect(){
+  const sel=ge('pr-prod-sel');
+  const pid=sel.value;
+  if(!pid) return;
+  const p=IDX.prod.get(pid);
+  if(!p) return;
+  // Preenche preço de saída com preço ideal do produto
+  if(!gv('pr-vs')||gv('pr-vs')==='0') gv('pr-vs', p.preco||0);
+  // Preenche equipamentos com nome do produto se vazio
+  if(!gv('pr-eq').trim()) gv('pr-eq', p.nome+(p.modelo?' '+p.modelo:''));
+  cPL();
+}
+function sProp(){
+  if(!checkPerm('edit')) return;
+  const id=gv('pr-eid');
+  const nm=gv('pr-nm').trim(); if(!nm){toast('Nome obrigatório','err');return}
+  const prodId=gv('pr-prod-sel');
+  const prodRef=prodId?IDX.prod.get(prodId):null;
+  const d={nome:nm,cliente:gv('pr-cl'),responsavel:gv('pr-rs'),equipamentos:gv('pr-eq'),prodId:prodId||null,prodNome:prodRef?.nome||gv('pr-eq'),qtd:+gv('pr-qt')||1,lote:gv('pr-lt'),valorR:+gv('pr-vr')||0,valorS:+gv('pr-vs')||0,lucro:(+gv('pr-vr')||0-(+gv('pr-vs')||0))*(+gv('pr-qt')||1),data:gv('pr-dt'),status:gv('pr-st'),obs:gv('pr-ob')};
+  if(id){const idx=DB.propostas.findIndex(p=>p.id===id);if(idx>=0){DB.propostas[idx]={...DB.propostas[idx],...d,upd:now()};logF('sistema','Proposta editada',d.nome)}}
+  else{DB.propostas.push({id:uid(),criado:now(),...d});logF('sistema','Proposta criada',d.nome)}
+  invalidateAlerts(); save();
+  const savedProp=id?DB.propostas.find(x=>x.id===id):DB.propostas[DB.propostas.length-1];
+  if(savedProp) DataAdapter.upsertOne('propostas',savedProp).catch(e=>console.warn('prop upsert:',e));
+  cPropE(); rProps(); updBadges(); toast(id?'Proposta atualizada!':'Proposta registrada!');
+}
+function editProp(id){
+  const p=DB.propostas.find(x=>x.id===id); if(!p) return;
+  gv('pr-eid',p.id); gv('pr-nm',p.nome); gv('pr-cl',p.cliente||''); gv('pr-rs',p.responsavel||'');
+  gv('pr-eq',p.equipamentos||''); gv('pr-qt',p.qtd||1); gv('pr-lt',p.lote||'');
+  gv('pr-vr',p.valorR||0); gv('pr-vs',p.valorS||0); gv('pr-dt',p.data||'');
+  gv('pr-st',p.status||'analise'); gv('pr-ob',p.obs||'');
+  const _ps=ge('pr-prod-sel');if(_ps&&p.prodId){_ps.value=p.prodId;}
+  ge('pr-ft').textContent='Editar Proposta'; ge('pr-bl').textContent='Salvar'; ge('pr-cb').style.display='';
+  cPL();
+}
+function cPropE(){gv('pr-eid','');['pr-nm','pr-cl','pr-rs','pr-eq','pr-lt','pr-obs'].forEach(f=>gv(f,''));gv('pr-qt',1);gv('pr-vr',0);gv('pr-vs',0);gv('pr-st','analise');ge('pr-ft').textContent='Nova Proposta';ge('pr-bl').textContent='Registrar';ge('pr-cb').style.display='none';ge('pr-lc').textContent='R 0,00';const ps=ge('pr-prod-sel');if(ps)ps.value='';}
+function delProp(id){if(!checkPerm('admin')) return;if(!confirm('Excluir proposta?'))return;DB.propostas=DB.propostas.filter(x=>x.id!==id);save();rProps();updBadges();toast('Excluída.');}
+function rProps(){
+  initPropProdSelect();
+  const q=gv('pr-q').toLowerCase(), ft=gv('pr-flt');
+  // OPT: filtrar antes de sort
+  let ps=DB.propostas.filter(p=>{const sq=!q||p.nome.toLowerCase().includes(q)||(p.cliente||'').toLowerCase().includes(q);const sf=!ft||p.status===ft;return sq&&sf;}).slice().sort((a,b)=>new Date(b.criado)-new Date(a.criado));
+  const stcls={analise:'ba',aprovado:'bg',recusado:'br',finalizado:'bb'};
+  const stlbl={analise:'Em análise',aprovado:'Aprovado',recusado:'Recusado',finalizado:'Finalizado'};
+  const _canDelProp=canDo('propostas','delete'); const _canEditProp=canDo('propostas','update');
+  ge('pr-list').innerHTML=ps.length?ps.map(p=>`<div class="prop-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px"><div><div style="font-size:13px;font-weight:700">${esc(p.nome)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(p.cliente||'Sem cliente')} • ${fdts(p.data||p.criado)}${p.prodNome?` • 📦 ${esc(p.prodNome)}`:''}</div></div><span class="badge ${stcls[p.status]||'bm'}">${esc(stlbl[p.status]||p.status)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px"><div><div style="font-size:9px;color:var(--text-hint);font-weight:700">RECEBIDO</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace">${fR(p.valorR)}</div></div><div><div style="font-size:9px;color:var(--text-hint);font-weight:700">SAÍDA</div><div style="font-size:12px;font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace">${fR(p.valorS)}</div></div><div><div style="font-size:9px;color:var(--text-hint);font-weight:700">LUCRO</div><div style="font-size:12px;font-weight:700;color:${p.lucro>=0?'var(--green)':'var(--red)'};font-family:'JetBrains Mono',monospace">${fR(p.lucro||0)}</div></div></div><div style="display:flex;gap:6px">${_canEditProp?`<button class="lbtn" onclick="editProp('${esc(p.id)}')">✏ Editar</button>`:''} ${_canDelProp?`<button class="lbtn d" onclick="delProp('${esc(p.id)}')">✕ Excluir</button>`:''}</div></div>`).join(''):'<div class="empty-state"><svg viewBox="0 0 24 24" style="width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.5;margin:0 auto 10px;display:block;opacity:.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Nenhuma proposta.</p></div>';
+  const totL=DB.propostas.reduce((a,p)=>a+(p.lucro||0),0);
+  const apr=DB.propostas.filter(p=>p.status==='aprovado').length;
+  const anl=DB.propostas.filter(p=>p.status==='analise').length;
+  ge('pr-kpis').innerHTML=`<div><div style="font-size:9px;color:var(--text-hint);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Total</div><div style="font-size:18px;font-weight:800;color:var(--blue);font-family:'JetBrains Mono',monospace">${DB.propostas.length}</div></div><div><div style="font-size:9px;color:var(--text-hint);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Em análise</div><div style="font-size:18px;font-weight:800;color:var(--amber);font-family:'JetBrains Mono',monospace">${anl}</div></div><div><div style="font-size:9px;color:var(--text-hint);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Aprovadas</div><div style="font-size:18px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace">${apr}</div></div><div><div style="font-size:9px;color:var(--text-hint);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Lucro Total</div><div style="font-size:14px;font-weight:800;color:${totL>=0?'var(--green)':'var(--red)'};font-family:'JetBrains Mono',monospace">${fR(totL)}</div></div>`;
+}
+
+// ─── FINANCEIRO ─────────────────────────────────────────────────────────────
+function rFin(){
+  const ps=DB.produtos;
+  // OPT: single pass para todos os totais financeiros
+  let totV=0,totC=0,vV=0;
+  ps.forEach(p=>{const q=p.qtd||0,pr=p.preco||0,pm=p.pmin||0;totV+=q*pr;totC+=q*pm;if(p.destino==='venda')vV+=q*pr;});
+  const totM=totC>0?Math.round((totV-totC)/totC*100):0;
+  ge('fin-kpis').innerHTML=`<div class="kpi-card kgr"><div class="kpi-icon igr"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-label">Valor Potencial</div><div class="kpi-value" style="font-size:15px">${fR(totV)}</div><div class="kpi-sub">pelo preço ideal</div></div><div class="kpi-card kbl"><div class="kpi-icon ibl"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="kpi-label">Custo Base</div><div class="kpi-value" style="font-size:15px">${fR(totC)}</div><div class="kpi-sub">pelo preço mínimo</div></div><div class="kpi-card kam"><div class="kpi-icon iam"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kpi-label">Margem Geral</div><div class="kpi-value" style="color:${totM>=0?'var(--green)':'var(--red)'}">${totM>0?'+':''}${totM}%</div><div class="kpi-sub">retorno sobre custo</div></div><div class="kpi-card kpu"><div class="kpi-icon ipu"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div><div class="kpi-label">Potencial de Venda</div><div class="kpi-value" style="font-size:15px">${fR(vV)}</div><div class="kpi-sub">itens destinados a venda</div></div>`;
+  // chart por marca
+  const marks={};ps.forEach(p=>{const m=p.marca||'Outros';marks[m]=(marks[m]||0)+(p.qtd||0)*(p.preco||0)});
+  const mk=Object.keys(marks).sort((a,b)=>marks[b]-marks[a]).slice(0,8);
+  if(charts['cFin']) charts['cFin'].destroy();
+  const ctx=ge('cFin');if(ctx){charts['cFin']=new Chart(ctx,{type:'bar',data:{labels:mk,datasets:[{label:'Valor',data:mk.map(m=>marks[m]),backgroundColor:'rgba(56,189,248,.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7B90AA',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#7B90AA',font:{size:10},callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'rgba(255,255,255,.04)'}}}}})}
+  // ABC
+  const abcC={A:0,B:0,C:0}; ps.forEach(p=>{if(p.abc) abcC[p.abc]=(abcC[p.abc]||0)+(p.qtd||0)*(p.preco||0)});
+  if(charts['cAbc']) charts['cAbc'].destroy();
+  const ctx2=ge('cAbc');if(ctx2){charts['cAbc']=new Chart(ctx2,{type:'doughnut',data:{labels:['Classe A','Classe B','Classe C'],datasets:[{data:[abcC.A,abcC.B,abcC.C],backgroundColor:['rgba(248,113,113,.8)','rgba(251,217,76,.8)','rgba(129,140,248,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7B90AA',font:{size:11}}}}}})}
+  // tabela
+  ge('fin-tb').innerHTML=ps.slice().sort((a,b)=>(b.qtd||0)*(b.preco||0)-(a.qtd||0)*(a.preco||0)).map(p=>{
+    const mg=p.pmin>0?Math.round((p.preco-p.pmin)/p.pmin*100):0;
+    return`<tr><td class="td-bold">${p.nome}<div style="font-size:10px;color:var(--text-muted)">${p.marca||''}</div></td><td class="td-mono">${p.qtd||0}</td><td class="td-mono">${fR(p.pmin||0)}</td><td class="td-mono">${fR(p.preco||0)}</td><td class="td-mono">${fR(p.pmax||0)}</td><td class="td-mono" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>0?'+':''}${mg}%</td><td class="td-mono td-bold" style="color:var(--green)">${fR((p.qtd||0)*(p.preco||0))}</td><td><span class="badge ${ABC_CLS[p.abc]||'bm'}">${p.abc||'—'}</span></td></tr>`;
+  }).join('');
+}
+
+// ─── MARGEM ─────────────────────────────────────────────────────────────────
+function rMarg(){
+  // OPT: sort por valor total decrescente
+  ge('mg-tb').innerHTML=DB.produtos.slice().sort((a,b)=>(b.qtd||0)*(b.preco||0)-(a.qtd||0)*(a.preco||0)).map(p=>{
+    const mg=p.pmin>0?Math.round((p.preco-p.pmin)/p.pmin*100):0;
+    const st=!p.preco?'bm':p.preco<p.pmin?'br':p.preco<p.pmax?'bg':'bb';
+    const stl=!p.preco?'Sem preço':p.preco<p.pmin?'Abaixo do mínimo':p.preco<p.pmax?'Faixa ideal':'Preço máximo';
+    return`<tr><td class="td-bold">${p.nome}</td><td class="td-mono">${p.qtd||0}</td><td class="td-mono">${fR(p.pmin||0)}</td><td class="td-mono">${fR(p.preco||0)}</td><td class="td-mono">${fR(p.pmax||0)}</td><td class="td-mono" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>0?'+':''}${mg}%</td><td><span class="badge ${st}">${stl}</span></td></tr>`;
+  }).join('');
+}
+
+// ─── FORNECEDORES ───────────────────────────────────────────────────────────
+function openFM(id){
+  const e=id?DB.fornecedores.find(f=>f.id===id):null;
+  gv('mf-id',e?e.id:''); gv('mf-nm',e?e.nome:''); gv('mf-ct',e?e.contato||'':'');
+  gv('mf-tf',e?e.tel||'':''); gv('mf-em',e?e.email||'':'');
+  gv('mf-cn',e?e.cnpj||'':''); gv('mf-ob',e?e.obs||'':'');
+  oM('m-forn');
+}
+function sForn(){
+  if(!checkPerm('admin')) return;
+  const id=gv('mf-id'), nm=gv('mf-nm').trim(); if(!nm){toast('Nome obrigatório','err');return}
+  const d={nome:nm,contato:gv('mf-ct'),tel:gv('mf-tf'),email:gv('mf-em'),cnpj:gv('mf-cn'),obs:gv('mf-ob')};
+  if(id){const idx=DB.fornecedores.findIndex(f=>f.id===id);if(idx>=0){DB.fornecedores[idx]={...DB.fornecedores[idx],...d,upd:now()};logF('sistema','Fornecedor editado',nm)}}
+  else{DB.fornecedores.push({id:uid(),criado:now(),...d});logF('sistema','Fornecedor cadastrado',nm)}
+  rebuildIdx(); save();
+  const savedForn=id?DB.fornecedores.find(x=>x.id===id):DB.fornecedores[DB.fornecedores.length-1];
+  if(savedForn) DataAdapter.upsertOne('fornecedores',savedForn).catch(e=>console.warn('forn upsert:',e));
+  cM('m-forn'); rForn(); toast('Fornecedor salvo!');
+}
+function delForn(id){
+  if(!checkPerm('admin')) return;
+  const f=DB.fornecedores.find(x=>x.id===id); if(!f) return;
+  if(!confirm(`Excluir fornecedor "${f.nome}"?`)) return;
+  DB.fornecedores=DB.fornecedores.filter(x=>x.id!==id);
+  logF('exclusao','Fornecedor excluído',f.nome);
+  rebuildIdx(); save();
+  DataAdapter.deleteOne('fornecedores',id).catch(e=>console.warn('forn delete:',e));
+  rForn(); toast('Fornecedor excluído.');
+}
+function rForn(){
+  applyPermUI();
+  ge('fn-empty').style.display=DB.fornecedores.length?'none':'block';
+  const _fpc=new Map();
+  DB.produtos.forEach(p=>{if(p.fornecedor)_fpc.set(p.fornecedor,(_fpc.get(p.fornecedor)||0)+1);});
+  ge('fn-tb').innerHTML=DB.fornecedores.map(f=>{
+    const pc=_fpc.get(f.id)||0;
+    return`<tr><td class="td-bold">${esc(f.nome)}</td><td class="td-muted">${esc(f.contato||'—')}</td><td class="td-muted">${esc(f.email||'—')}</td><td class="td-muted">${esc(f.tel||'—')}</td><td class="td-mono">${pc}</td><td class="act">${canDo('fornecedores','update')?`<button class="lbtn" onclick="openFM('${esc(f.id)}')">✏</button>`:''} ${canDo('fornecedores','delete')?`<button class="lbtn d" onclick="delForn('${esc(f.id)}')">✕</button>`:''}</td></tr>`;
+  }).join('');
+}
+
+// ─── RELATÓRIOS ─────────────────────────────────────────────────────────────
+function gRel(tipo){
+  let rows=[], head='';
+  if(tipo==='estoque'){
+    head='Produto,Marca,Categoria,Estado,Aparência,Destino,Status,Qtd,Mínimo,Máximo,Preço Mín,Preço Ideal,Preço Máx,Valor Total,ABC';
+    rows=DB.produtos.map(p=>[p.nome,p.marca||'',p.categoria||'',p.estado||'',AP_LBL[p.aparencia]||'',DEST_LBL[p.destino]||'',SC_LBL[p.statuscom]||'',p.qtd||0,p.qmin||0,p.qmax||0,p.pmin||0,p.preco||0,p.pmax||0,(p.qtd||0)*(p.preco||0),p.abc||''].join(','));
+  } else if(tipo==='movs'){
+    head='Tipo,Produto,Qtd,Data,Responsável,Classificação,Lote,Origem/Destino,Obs';
+    rows=DB.movimentacoes.slice().sort((a,b)=>new Date(b.ts)-new Date(a.ts)).map(m=>[m.tipo,m.prodNome||'',m.qtd,fdt(m.ts),m.user||'',m.classificacao||'',m.lote||'',m.destino||'',(m.obs||'').replace(/,/g,';')].join(','));
+  } else {
+    head='Produto,Marca,Estoque,P.Mínimo,P.Ideal,P.Máximo,Margem%,Valor Total';
+    rows=DB.produtos.map(p=>{const mg=p.pmin>0?Math.round((p.preco-p.pmin)/p.pmin*100):0;return[p.nome,p.marca||'',p.qtd||0,p.pmin||0,p.preco||0,p.pmax||0,mg,(p.qtd||0)*(p.preco||0)].join(',')});
+  }
+  const csv=[head,...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`MAXX_${tipo}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  toast('Relatório exportado!');
+}
+
+// ─── USUÁRIOS ───────────────────────────────────────────────────────────────
+function openUserModal(id){
+  if(!checkPerm('admin')) return;
+  const e=id?DB.usuarios.find(u=>u.id===id):null;
+  ge('mu-t').textContent=e?'Editar Usuário':'Novo Usuário';
+  ge('mu-bl').textContent=e?'Salvar':'Criar usuário';
+  gv('mu-id',e?e.id:''); gv('mu-us',e?e.login:''); gv('mu-nm',e?e.nome:'');
+  gv('mu-pw',''); gv('mu-c2',''); gv('mu-rl',e?e.perfil:'consulta');
+  gv('mu-em',e?e.email||'':''); gv('mu-st',e?e.status:'ativo');
+  oM('m-user');
+}
+async function sUser(){
+  if(!checkPerm('admin')) return;
+  const id=gv('mu-id'), email=gv('mu-em').trim(), nm=gv('mu-nm').trim();
+  const pw=gv('mu-pw'), c2=gv('mu-c2'), rl=gv('mu-rl'), st=gv('mu-st');
+  const login=gv('mu-us').trim().toLowerCase()||email.split('@')[0];
+  if(!email||!nm){toast('E-mail e nome são obrigatórios','err');return}
+  if(!id&&!pw){toast('Senha obrigatória para novo usuário','err');return}
+  if(pw&&pw!==c2){toast('Senhas não coincidem','err');return}
+  if(pw&&pw.length<8){toast('Senha mínima: 8 caracteres','err');return}
+  const dup=DB.usuarios.find(u=>(u.email?.toLowerCase()===email.toLowerCase()||u.login===login)&&u.id!==id);
+  if(dup){toast('E-mail ou login já cadastrado','err');return}
+  // Supabase Auth: criar/atualizar usuário via Admin API (via edge function ou direto)
+  let authUid=null;
+  if(DataAdapter.isSupabase()&&!id){
+    // Convite por e-mail — cria usuário no Supabase Auth
+    const {data:authData,error:authErr}=await SupabaseDriver._client.auth.admin?.createUser({
+      email, password:pw, email_confirm:true
+    }).catch(()=>({data:null,error:{message:'Admin API indisponível — crie via Supabase Dashboard'}}));
+    if(authErr){toast(`Auth: ${authErr.message}`,'warn');}
+    else if(authData?.user) authUid=authData.user.id;
+  }
+  if(id){
+    const idx=DB.usuarios.findIndex(u=>u.id===id);
+    if(idx>=0){
+      // Nunca armazenar senha em texto quando Supabase Auth está ativo
+      const senhaLocal=DataAdapter.isSupabase()?undefined:(pw||DB.usuarios[idx].senha);
+      DB.usuarios[idx]={...DB.usuarios[idx],login,nome:nm,perfil:rl,email,status:st,
+        ...(senhaLocal?{senha:senhaLocal}:{}),upd:now()};
+      logF('sistema','Usuário editado',`${nm} (${rl})`);
+    }
+  } else {
+    const senhaLocal=DataAdapter.isSupabase()?'[supabase-auth]':pw;
+    DB.usuarios.push({id:uid(),login,senha:senhaLocal,nome:nm,perfil:rl,email,status:st,
+      auth_uid:authUid,org_id:DB.cfg?.org_id||null,criado:now(),ultimo:''});
+    logF('sistema','Usuário criado',`${nm} (${rl})`);
+  }
+  rebuildIdx(); save();
+  const savedUser=id?DB.usuarios.find(x=>x.id===id):DB.usuarios[DB.usuarios.length-1];
+  if(savedUser) DataAdapter.upsertOne('usuarios',savedUser).catch(e=>console.warn('user upsert:',e));
+  cM('m-user'); rUsers(); toast('Usuário salvo!');
+}
+function delUser(id){
+  if(!checkPerm('admin')) return;
+  if(id===CU.id){toast('Não é possível excluir o usuário atual','err');return}
+  const u=DB.usuarios.find(x=>x.id===id); if(!u) return;
+  if(!confirm(`Excluir usuário "${u.nome}"?`)) return;
+  DB.usuarios=DB.usuarios.filter(x=>x.id!==id);
+  logF('sistema','Usuário excluído',u.nome);
+  rebuildIdx(); save();
+  DataAdapter.deleteOne('usuarios',id).catch(e=>console.warn('user delete:',e));
+  rUsers(); toast('Usuário excluído.');
+}
+function toggleUser(id){
+  if(!checkPerm('admin')) return;
+  const u=DB.usuarios.find(x=>x.id===id); if(!u) return;
+  if(id===CU.id){toast('Não é possível bloquear o usuário atual','err');return}
+  u.status=u.status==='ativo'?'bloqueado':'ativo';
+  logF('sistema',`Usuário ${u.status}`,u.nome);
+  rebuildIdx(); save(); rUsers(); toast(`Usuário ${u.status}.`);
+}
+function rUsers(){
+  if(!CU) return;
+  const rcls={admin:'role-badge-admin',operador:'role-badge-operador',consulta:'role-badge-consulta'};
+  // E5: nunca exibir senha — mesmo em modo local
+  ge('usr-tb').innerHTML=DB.usuarios.map(u=>`<tr>
+    <td class="td-mono td-blue">@${esc(u.login||u.email||'')}</td>
+    <td class="td-bold">${esc(u.nome)}</td>
+    <td><span class="badge ${rcls[u.perfil]||'bm'}">${esc(ROLES[u.perfil]||u.perfil)}</span></td>
+    <td><span class="badge ${u.status==='ativo'?'bg':'br'}">${esc(u.status)}</span></td>
+    <td class="td-mono td-muted">${u.ultimo?fdt(u.ultimo):'Nunca'}</td>
+    <td class="act">
+      <button class="lbtn" onclick="openUserModal('${esc(u.id)}')">✏</button>
+      ${u.id!==CU.id?`<button class="lbtn" onclick="toggleUser('${esc(u.id)}')" title="${u.status==='ativo'?'Bloquear':'Desbloquear'}">${u.status==='ativo'?'🔒':'🔓'}</button>`:''}
+      ${u.id!==CU.id?`<button class="lbtn d" onclick="delUser('${esc(u.id)}')">✕</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+function rCfg(){
+  const isSupaActive = DataAdapter.isSupabase();
+  const supaStatus = isSupaActive
+    ? '<span class="badge bg">● Conectado</span>'
+    : '<span class="badge bm">○ Não configurado</span>';
+  ge('sys-info').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Versão</span><span class="td-mono td-blue">MAXX v3.0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Produtos</span><span class="td-mono">${DB.produtos.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Movimentações</span><span class="td-mono">${DB.movimentacoes.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Propostas</span><span class="td-mono">${DB.propostas.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Fornecedores</span><span class="td-mono">${DB.fornecedores.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Usuários</span><span class="td-mono">${DB.usuarios.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Logs de auditoria</span><span class="td-mono">${DB.fluxo.length}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Armazenamento</span><span class="badge bb">${DataAdapter.driver.name}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Schema versão</span><span class="td-mono">${DB.cfg?.schema_ver||3}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">Organização (org_id)</span><span class="td-mono td-muted" style="font-size:10px">${DB.cfg?.org_id||'(local — sem org)'}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0"><span style="color:var(--text-muted)">Supabase</span>${supaStatus}</div>
+    </div>`;
+  // Botão de configurar Supabase
+  const supaBtn=ge('supa-cfg-btn');
+  if(supaBtn){ supaBtn.textContent=isSupaActive?'Reconfigurar Supabase':'Conectar Supabase'; }
+}
+function exportBackup(){
+  // Inclui metadados de migração no backup — facilita importação futura para PG
+  const payload = {
+    ...DB,
+    _meta: {
+      exported_at: now(),
+      schema_ver: DB.cfg?.schema_ver||3,
+      adapter: DataAdapter.driver.name,
+      matrix_ver: '3.0',
+      // Em Supabase: este JSON pode ser importado via scripts de seed
+      // Tabelas alvo: produtos, movimentacoes, fornecedores, propostas, usuarios, audit_log
+    }
+  };
+  const blob=new Blob([DataAdapter.exportBackup(payload)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`MAXX_backup_${new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)}.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  logF('sistema','Backup exportado',`${new Date().toLocaleString('pt-BR')}`);
+  toast('Backup exportado com sucesso!');
+}
+function importBackup(inp){
+  const f=inp.files[0]; if(!f) return;
+  // FIX: limite de tamanho para evitar travamento com arquivo enorme
+  if(f.size>5*1024*1024){toast('Arquivo muito grande (máx. 5MB)','err');inp.value='';return}
+  if(!confirm('Isso irá substituir todos os dados atuais. Continuar?')){inp.value='';return}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const raw=DataAdapter.importBackup(ev.target.result);
+      if(!raw||typeof raw!=='object'||!Array.isArray(raw.produtos)||!Array.isArray(raw.usuarios))
+        throw new Error('Estrutura inválida');
+      // Verifica compatibilidade de schema_ver para migração incremental
+      const bkVer = raw._meta?.schema_ver || raw.cfg?.schema_ver || 1;
+      const curVer = DB.cfg?.schema_ver || 3;
+      if(bkVer > curVer){
+        toast(`Backup de versão ${bkVer} incompatível com esta versão (${curVer}).`,'err');
+        return;
+      }
+      // Remove metadados de migração antes de carregar
+      const {_meta, ...data} = raw;
+      DB=sanitizeDB(data); rebuildIdx(); invalidateAlerts(); save();
+      logF('sistema','Backup importado',esc(f.name));
+      toast('Backup restaurado!');
+      rCfg(); rDash(); updBadges();
+    } catch(e){toast('Arquivo de backup inválido ou corrompido!','err');}
+  };
+  r.readAsText(f); inp.value='';
+}
+function clearMovs(){
+  if(!checkPerm('admin')) return;
+  if(!confirm('Limpar TODAS as movimentações? Esta ação não pode ser desfeita.')) return;
+  logF('sistema','Movimentações limpas',`${DB.movimentacoes.length} registros removidos`);
+  DB.movimentacoes=[]; rebuildIdx(); invalidateAlerts(); save(); rCfg(); toast('Movimentações limpas.');
+}
+function clearAll(){
+  if(!checkPerm('admin')) return;
+  if(!confirm('Resetar TODOS os dados (produtos, movimentações, propostas, fornecedores, logs)? Usuários serão mantidos. Esta ação não pode ser desfeita.')) return;
+  const u=DB.usuarios;
+  DB=initDB(); DB.usuarios=u; rebuildIdx(); invalidateAlerts(); save(); rCfg(); rDash(); rEst(); rProd(); updBadges();
+  logF('sistema','Sistema resetado',`Todos os dados foram limpos`);
+  toast('Sistema resetado.');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPABASE — Configuração, migração e sincronização realtime
+// ═══════════════════════════════════════════════════════════════════════════
+
+function openSupaCfg(){
+  if(!checkPermMatrix('config','write')) return;
+  const saved = _loadSupaCfg();
+  if(saved){ gv('supa-url',saved.url); gv('supa-key',saved.key); gv('supa-bucket',saved.bucket||'matrix-imagens'); }
+  ge('supa-test-result').style.display='none';
+  oM('m-supa');
+}
+
+function _loadSupaCfg(){
+  try{ return JSON.parse(localStorage.getItem('matrix_supa_cfg')||'null'); } catch{ return null; }
+}
+
+async function testSupaConn(){
+  const url=gv('supa-url').trim(), key=gv('supa-key').trim();
+  if(!url||!key){ toast('URL e chave são obrigatórios','err'); return; }
+  const res=ge('supa-test-result');
+  res.style.display='block';
+  res.innerHTML='<div class="alert alert-info"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/></svg>Testando conexão...</div>';
+  try{
+    const cl = window.supabase?.createClient(url,key);
+    if(!cl) throw new Error('Biblioteca Supabase não carregada');
+    const {error} = await cl.from('produtos').select('id').limit(1);
+    if(error&&error.code!=='PGRST116'&&!error.message?.includes('does not exist')){
+      res.innerHTML=`<div class="alert alert-danger"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Erro: ${esc(error.message)}</div>`;
+    } else {
+      res.innerHTML='<div class="alert alert-success"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>Conexão estabelecida com sucesso!</div>';
+    }
+  } catch(e){
+    res.innerHTML=`<div class="alert alert-danger"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Falha: ${esc(e.message)}</div>`;
+  }
+}
+
+async function saveSupaCfg(){
+  const url=gv('supa-url').trim(), key=gv('supa-key').trim(), bucket=gv('supa-bucket').trim()||'matrix-imagens';
+  if(!url||!key){ toast('URL e chave são obrigatórios','err'); return; }
+  if(!window.supabase){ toast('Biblioteca Supabase não carregada. Verifique a conexão com internet.','err'); return; }
+  const ok = SupabaseDriver.init(url, key, bucket);
+  if(!ok){ toast('Falha ao inicializar Supabase','err'); return; }
+  localStorage.setItem('matrix_supa_cfg', JSON.stringify({url,key,bucket}));
+  cM('m-supa');
+  toast('Conectando ao Supabase...','ok');
+  await _migrateToSupabase();
+}
+
+async function _migrateToSupabase(){
+  oM('m-migrate');
+  const log = ge('migrate-log');
+  const bar = ge('migrate-bar');
+  const status = ge('migrate-status');
+  const addLog = (msg,ok=true)=>{ log.innerHTML+=`<div style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✓':'✗'} ${esc(msg)}</div>`; log.scrollTop=log.scrollHeight; };
+  const setBar = pct=>{ bar.style.width=pct+'%'; status.textContent=`${pct}% concluído`; };
+
+  try{
+    setBar(5); addLog('Iniciando migração...');
+    const tables=[
+      {key:'fornecedores',lbl:'Fornecedores',table:'fornecedores'},
+      {key:'usuarios',lbl:'Usuários',table:'usuarios'},
+      {key:'produtos',lbl:'Produtos',table:'produtos'},
+      {key:'movimentacoes',lbl:'Movimentações',table:'movimentacoes'},
+      {key:'propostas',lbl:'Propostas',table:'propostas'},
+      {key:'fluxo',lbl:'Logs de auditoria',table:'audit_log'},
+    ];
+    const step = 80/tables.length;
+    let pct=5;
+    for(const t of tables){
+      addLog(`Migrando ${t.lbl} (${DB[t.key].length} registros)...`);
+      let rows = DB[t.key];
+      if(t.key==='fluxo') rows=rows.map(e=>({id:e.id,tipo:e.tipo,titulo:e.titulo,detalhe:e.detalhe||'',prod:e.prod||'',qtd:e.qtd||0,user_nome:e.user||'Sistema',user_id:e.user_id||null,org_id:e.org_id||null,ts:e.ts||new Date().toISOString()}));
+      // FIX CRÍTICO #3: migração de 'usuarios' nunca envia o campo 'senha'
+      // (texto plano local) para o Postgres. Autenticação passa a ser
+      // exclusivamente via Supabase Auth (auth_uid).
+      if(t.key==='usuarios') rows=rows.map(({senha, ...rest})=>rest);
+      if(rows.length>0){
+        // Upsert em lotes de 50
+        for(let i=0;i<rows.length;i+=50){
+          const batch=rows.slice(i,i+50);
+          const {error}=await SupabaseDriver._client.from(t.table).upsert(batch,{onConflict:'id',ignoreDuplicates:true});
+          if(error&&!error.message?.includes('duplicate')) addLog(`Aviso ${t.lbl}: ${error.message}`,false);
+        }
+      }
+      pct+=step; setBar(Math.round(pct));
+      addLog(`${t.lbl} migrado.`);
+    }
+    setBar(90); addLog('Ativando driver Supabase...');
+    DataAdapter.setDriver(SupabaseDriver);
+    DB.cfg.adapter='supabase';
+    save(true);
+    setBar(95); addLog('Configurando sincronização realtime...');
+    _initRealtimeSync();
+    setBar(100); addLog('Migração concluída com sucesso! ✓');
+    status.textContent='Migração concluída!';
+    status.style.color='var(--green)';
+    setTimeout(()=>{ cM('m-migrate'); rCfg(); toast('Supabase ativado! Dados sincronizados.','ok'); },1800);
+  } catch(e){
+    addLog(`Erro crítico: ${e.message}`,false);
+    status.textContent='Erro na migração';
+    status.style.color='var(--red)';
+    console.error('MATRIX migration error:',e);
+  }
+}
+
+// FIX ALTO #4: normaliza uma linha recebida via Realtime antes de mesclar
+// no DB local. Reaplica a mesma coerção numérica usada por sanitizeDB
+// (qtd, qmin, qmax, preco, pmin, pmax) e invalida caches dependentes
+// (_lnome de produtos), evitando NaN/concatenação de string em rFin/rDash
+// quando o Postgres retorna valores numéricos como string.
+function _normalizeRealtimeRow(localKey, row){
+  if(localKey==='produtos'){
+    return {
+      ...row,
+      qtd:   Math.max(0, parseInt(row.qtd)||0),
+      qmin:  Math.max(0, parseInt(row.qmin)||0),
+      qmax:  Math.max(0, parseInt(row.qmax)||0),
+      preco: Math.max(0, parseFloat(row.preco)||0),
+      pmin:  Math.max(0, parseFloat(row.pmin)||0),
+      pmax:  Math.max(0, parseFloat(row.pmax)||0),
+      _lnome: (row.nome||'').toLowerCase(), // recalcula cache de busca
+    };
+  }
+  if(localKey==='movimentacoes'){
+    return { ...row, qtd: Math.max(0, parseInt(row.qtd)||0) };
+  }
+  if(localKey==='propostas'){
+    return {
+      ...row,
+      qtd:    Math.max(1, parseInt(row.qtd)||1),
+      valorR: parseFloat(row.valorR)||0,
+      valorS: parseFloat(row.valorS)||0,
+      lucro:  parseFloat(row.lucro)||0,
+    };
+  }
+  return row; // fornecedores: sem campos numéricos
+}
+
+function _initRealtimeSync(){
+  if(!DataAdapter.isSupabase()) return;
+  SupabaseDriver.subscribeRealtime(async(table, payload)=>{
+    // Aplica mudanças remotas sem recarregar a página
+    const mapTable={produtos:'produtos',fornecedores:'fornecedores',movimentacoes:'movimentacoes',propostas:'propostas'};
+    const localKey=mapTable[table]; if(!localKey) return;
+    if(payload.eventType==='INSERT'||payload.eventType==='UPDATE'){
+      // FIX ALTO #4: normaliza tipos e invalida _lnome antes do merge
+      const row=_normalizeRealtimeRow(localKey, payload.new);
+      const idx=DB[localKey].findIndex(x=>x.id===row.id);
+      if(idx>=0) DB[localKey][idx]={...DB[localKey][idx],...row};
+      else DB[localKey].push(row);
+    } else if(payload.eventType==='DELETE'){
+      DB[localKey]=DB[localKey].filter(x=>x.id!==payload.old.id);
+    }
+    rebuildIdx(); invalidateAlerts();
+    save(); // FIX ALTO #6: usa save() debounced em vez de persist direto
+    renderActiveSection();
+    updBadges();
+  });
+}
+
+async function _autoConnectSupabase(){
+  const cfg=_loadSupaCfg();
+  if(!cfg||!window.supabase) return false;
+  const ok=SupabaseDriver.init(cfg.url,cfg.key,cfg.bucket);
+  if(!ok) return false;
+  // Testa a conexão antes de ativar
+  try{
+    const {error}=await SupabaseDriver._client.from('produtos').select('id').limit(1);
+    if(error&&error.code!=='PGRST116') return false;
+    DataAdapter.setDriver(SupabaseDriver);
+    DB.cfg.adapter='supabase';
+    // Restaura sessão Supabase existente (JWT ainda válido)
+    const {data:sess} = await SupabaseDriver._client.auth.getSession();
+    if(sess?.session){
+      const authUid = sess.session.user.id;
+      const {data:perfil} = await SupabaseDriver._client
+        .from('usuarios').select('*').eq('auth_uid',authUid).eq('status','ativo').single();
+      if(perfil){ CU={...perfil,_authSession:sess.session}; _applySession(); }
+    }
+    // Carrega dados frescos do Supabase
+    const fresh=await SupabaseDriver.load();
+    if(fresh){ DB=sanitizeDB(fresh); rebuildIdx(); invalidateAlerts(); LocalDriver.persist(DB); }
+    _initRealtimeSync();
+    SessionManager.listenAuthChanges();
+    return true;
+  } catch{ return false; }
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+async function initAll(){
+  rebuildIdx();
+  DB.produtos.forEach(p=>{p._lnome=p.nome.toLowerCase();});
+  initMovForm(); initPropProdSelect(); updBadges(); rDash();
+  // Auto-conectar Supabase se configurado
+  const supaOk = await _autoConnectSupabase();
+  if(supaOk){ rCfg(); toast('Supabase conectado e sincronizado.','ok'); }
+  else if(DataAdapter.isSupabase()) SessionManager.listenAuthChanges();
+  const lastBk=localStorage.getItem('stockpro_lastbk');
+  if(!lastBk||Date.now()-+lastBk>7*864e5){ localStorage.setItem('stockpro_lastbk',Date.now().toString()); }
+}
+
+function initSearchDebounce(){
+  const map={'est-q':rEst,'prod-q':rProd,'movl-q':rMovL,'fx-q':rFlux,'pr-q':rProps};
+  Object.entries(map).forEach(([id,fn])=>{const el=ge(id);if(el)el.oninput=debounce(fn,220);});
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&ge('loginScreen').style.display!=='none')doLogin();});
+document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)cM(ov.id);}));
+document.addEventListener('DOMContentLoaded',initSearchDebounce);
+</script>
+</body>
+</html>
